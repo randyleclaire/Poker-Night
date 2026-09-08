@@ -365,7 +365,9 @@ input:focus {
 
   <div class="card">
     <h2>Are you in?</h2>
-    <input type="text" id="name-input" placeholder="Your name" maxlength="40"/>
+    <select id="name-input" style="width:100%;background:rgba(255,255,255,0.07);border:1px solid rgba(245,216,122,0.28);border-radius:7px;padding:0.68rem 0.9rem;color:#f5f0e8;font-family:'Inter',sans-serif;font-size:0.93rem;outline:none;margin-bottom:0.75rem;transition:border-color 0.2s;">
+      <option value="">-- Select your name --</option>
+    </select>
     <div class="btn-row">
       <button class="btn btn-in" id="btn-in" onclick="rsvp('in')">♠ I'm In</button>
       <button class="btn btn-out" id="btn-out" onclick="rsvp('out')">✕ Can't Make It</button>
@@ -464,6 +466,35 @@ function showMsg(t,c){var e=document.getElementById('msg');e.textContent=t;e.sty
 function setButtons(d){document.getElementById('btn-in').disabled=d;document.getElementById('btn-out').disabled=d;}
 function getName(){return document.getElementById('name-input').value.trim();}
 
+function populateNameDropdown(){
+  var sel=document.getElementById('name-input');
+  var saved=localStorage.getItem('poker-name')||'';
+  // Clear all but first placeholder option
+  while(sel.options.length>1)sel.remove(1);
+  contacts.slice().sort(function(a,b){return a.name.localeCompare(b.name);}).forEach(function(c){
+    var opt=document.createElement('option');
+    opt.value=c.name;opt.textContent=c.name;
+    if(c.name===saved)opt.selected=true;
+    sel.appendChild(opt);
+  });
+  // Add "Someone else" free-type fallback at bottom
+  var other=document.createElement('option');
+  other.value='__other__';other.textContent='Someone else...';
+  sel.appendChild(other);
+  sel.addEventListener('change',function(){
+    if(sel.value==='__other__'){
+      var custom=prompt('Enter your name:');
+      if(custom&&custom.trim()){
+        // Add to list temporarily and select
+        var newOpt=document.createElement('option');
+        newOpt.value=custom.trim();newOpt.textContent=custom.trim();
+        sel.insertBefore(newOpt,other);
+        sel.value=custom.trim();
+      }else{sel.value='';}
+    }
+  });
+}
+
 async function loadSettings(){
   try{
     var res=await fetch(SCRIPT_URL+'?action=getSettings');
@@ -512,7 +543,7 @@ async function rsvp(status){
   try{
     var res=await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'rsvp',name:name,status:status,gameDate:document.getElementById('g-date').textContent})});
     var data=await res.json();
-    if(data.success){localStorage.setItem('poker-name',name);showMsg(status==='in'?"You're in! Don't be late.":"Noted. Your chips will be missed.");document.getElementById('name-input').value='';await loadList();}
+    if(data.success){localStorage.setItem('poker-name',name);showMsg(status==='in'?"You're in! Don't be late.":"Noted. Your chips will be missed.");await loadList();}
     else showMsg('Something went wrong. Try again.','#e07070');
   }catch(e){showMsg('Could not save. Check your connection.','#e07070');}
   setButtons(false);
@@ -525,12 +556,12 @@ async function optOut(){
   try{
     var res=await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'optout',name:name})});
     var data=await res.json();
-    if(data.success){localStorage.setItem('poker-name',name);showMsg("You're off the list. Take care out there.",'rgba(245,240,232,0.5)');document.getElementById('name-input').value='';await loadList();}
+    if(data.success){localStorage.setItem('poker-name',name);showMsg("You're off the list. Take care out there.",'rgba(245,240,232,0.5)');await loadList();}
   }catch(e){showMsg('Could not save. Try again.','#e07070');}
   setButtons(false);
 }
 
-loadSettings();loadList();renderContacts();var savedName=localStorage.getItem("poker-name");if(savedName)document.getElementById("name-input").value=savedName;
+loadSettings();loadList();renderContacts();populateNameDropdown();
 setInterval(loadList,30000);
 </script>
 </body>
