@@ -462,8 +462,75 @@ function addContact(){
   if(el){el.focus();el.select();}
 }
 
+function generateICS(){
+  // Read current game details from the page
+  var dateStr=document.getElementById('g-date').textContent||'';
+  var hostStr=document.getElementById('g-host').textContent||'Poker Night';
+  var timeStr=document.getElementById('g-time').textContent||'6:00 PM – 11:00 PM';
+
+  // Parse start/end times from timeStr e.g. "6:00 PM – 11:00 PM"
+  var timeParts=timeStr.split(/[–-]/);
+  var startTimeStr=(timeParts[0]||'6:00 PM').trim();
+  var endTimeStr=(timeParts[1]||'11:00 PM').trim();
+
+  // Parse the date string — handles "Wednesday, September 17, 2026"
+  var dateParsed=new Date(dateStr.replace(/^[A-Za-z]+,\s*/,''));
+  if(isNaN(dateParsed))dateParsed=new Date();
+
+  function parseTime(t,baseDate){
+    var m=t.match(/(\d+):?(\d*)\s*(AM|PM)/i);
+    if(!m)return baseDate;
+    var h=parseInt(m[1]);var mn=parseInt(m[2]||0);var ap=m[3].toUpperCase();
+    if(ap==='PM'&&h!==12)h+=12;
+    if(ap==='AM'&&h===12)h=0;
+    var d=new Date(baseDate);d.setHours(h,mn,0,0);return d;
+  }
+
+  var startDT=parseTime(startTimeStr,dateParsed);
+  var endDT=parseTime(endTimeStr,dateParsed);
+
+  function toICSDate(d){
+    var pad=function(n){return n<10?'0'+n:n;};
+    return d.getFullYear()+''+pad(d.getMonth()+1)+''+pad(d.getDate())+'T'+pad(d.getHours())+''+pad(d.getMinutes())+'00';
+  }
+
+  var ics=[
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Poker Night//MH Poker Society//EN',
+    'BEGIN:VEVENT',
+    'UID:poker-night-'+startDT.getTime()+'@morganhillpoker',
+    'DTSTAMP:'+toICSDate(new Date()),
+    'DTSTART:'+toICSDate(startDT),
+    'DTEND:'+toICSDate(endDT),
+    'SUMMARY:Poker Night — Morgan Hill',
+    'LOCATION:'+hostStr,
+    'DESCRIPTION:Morgan Hill Poker Society (Unofficial). Last winner brings dinner!',
+    'END:VEVENT',
+    'END:VCALENDAR'
+  ].join('\r\n');
+
+  var blob=new Blob([ics],{type:'text/calendar;charset=utf-8'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url;a.download='poker-night.ics';
+  document.body.appendChild(a);a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function showCalendarButton(){
+  var existing=document.getElementById('cal-btn');
+  if(existing)return;
+  var btn=document.createElement('button');
+  btn.id='cal-btn';
+  btn.className='btn-optout';
+  btn.style.cssText='width:100%;margin-top:0.5rem;background:rgba(82,183,136,0.12);border:1px solid rgba(82,183,136,0.35);border-radius:7px;padding:0.5rem;color:#52b788;font-family:Inter,sans-serif;font-size:0.82rem;cursor:pointer;';
+  btn.innerHTML='📅 Add to Calendar';
+  btn.onclick=generateICS;
+  document.getElementById('msg').insertAdjacentElement('afterend',btn);
+}
 function showMsg(t,c){var e=document.getElementById('msg');e.textContent=t;e.style.color=c||'#f5d87a';setTimeout(function(){e.textContent='';},3500);}
-function setButtons(d){document.getElementById('btn-in').disabled=d;document.getElementById('btn-out').disabled=d;}
 function getName(){return document.getElementById('name-input').value.trim();}
 
 function populateNameDropdown(){
@@ -565,7 +632,7 @@ async function rsvp(status){
   try{
     var res=await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'rsvp',name:name,status:status,gameDate:document.getElementById('g-date').textContent})});
     var data=await res.json();
-    if(data.success){localStorage.setItem('poker-name',name);showMsg(status==='in'?"You're in! Don't be late.":"Noted. Your chips will be missed.");await loadList();}
+    if(data.success){localStorage.setItem('poker-name',name);showMsg(status==='in'?"You're in! Don't be late.":"Noted. Your chips will be missed.");if(status==='in'){generateICS();showCalendarButton();}await loadList();}
     else showMsg('Something went wrong. Try again.','#e07070');
   }catch(e){showMsg('Could not save. Check your connection.','#e07070');}
   setButtons(false);
