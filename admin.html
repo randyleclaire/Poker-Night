@@ -247,11 +247,8 @@ textarea { resize: vertical; min-height: 65px; }
   <!-- WINNER QUESTION -->
   <div id="winner-section" class="card" style="display:none">
     <h2>Who won last poker night?</h2>
-    <label>Select from the poker group</label>
-    <select id="winner-select">
-      <option value="">-- Select the winner --</option>
-    </select>
-    <button class="btn-green" onclick="confirmWinner()">Confirm Winner ♠</button>
+    <label>Tap a name to select</label>
+    <div id="winner-list" style="margin-top:0.5rem;max-height:320px;overflow-y:auto;border:1px solid rgba(245,216,122,0.18);border-radius:8px;"></div>
     <div class="msg" id="winner-msg"></div>
   </div>
 
@@ -332,41 +329,83 @@ var CONTACTS=[
   'Seth Brown','Bill Yeager'
 ].sort();
 
+var selectedWinner='';
+
 function loadLastAttendees(){
-  var sel=document.getElementById('winner-select');
-  while(sel.options.length>1)sel.remove(1);
-  CONTACTS.forEach(function(name){
-    var opt=document.createElement('option');
-    opt.value=name;opt.textContent=name;sel.appendChild(opt);
-  });
-  // Also try to fetch last game attendees and mark them
+  var list=document.getElementById('winner-list');
+  list.innerHTML='';
+  selectedWinner='';
+
+  // Try to get last game attendees to highlight them
   fetch(SCRIPT_URL+'?action=getAll').then(function(r){return r.json();}).then(function(data){
-    var inPlayers=(data.attendees||[]).filter(function(a){return a.status==='in';}).map(function(a){return a.name;});
-    if(!inPlayers.length)return;
-    // Add a divider and last game players at top for convenience
-    var divider=document.createElement('option');
-    divider.disabled=true;divider.textContent='── Last game attendees ──';
-    sel.insertBefore(divider,sel.options[1]);
-    inPlayers.forEach(function(name){
-      var opt=document.createElement('option');
-      opt.value=name;opt.textContent=name+' ★';
-      sel.insertBefore(opt,divider);
+    var inPlayers=(data.attendees||[]).filter(function(a){return a.status==='in';}).map(function(a){return a.name.replace(' ★','').trim();});
+    renderWinnerList(inPlayers);
+  }).catch(function(){renderWinnerList([]);});
+}
+
+function renderWinnerList(lastGamePlayers){
+  var list=document.getElementById('winner-list');
+  list.innerHTML='';
+
+  // Last game players first with star badge
+  var sections=[];
+  if(lastGamePlayers.length){
+    sections.push({label:'Last Game',names:lastGamePlayers});
+  }
+  // Full contact list
+  sections.push({label:'All Players',names:CONTACTS});
+
+  sections.forEach(function(section){
+    var hdr=document.createElement('div');
+    hdr.style.cssText='padding:0.4rem 0.9rem;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.12em;color:rgba(245,216,122,0.5);font-weight:700;background:rgba(0,0,0,0.2);';
+    hdr.textContent=section.label;
+    list.appendChild(hdr);
+
+    section.names.forEach(function(name){
+      var clean=name.replace(' ★','').trim();
+      var btn=document.createElement('button');
+      btn.type='button';
+      btn.setAttribute('data-name',clean);
+      btn.style.cssText='width:100%;text-align:left;background:transparent;border:none;border-bottom:1px solid rgba(245,240,232,0.06);padding:0.7rem 1rem;color:#f5f0e8;font-family:Inter,sans-serif;font-size:0.93rem;cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:background 0.15s;';
+      btn.innerHTML=clean+(section.label==='Last Game'?' <span style="font-size:0.7rem;color:#f5d87a;">★ last game</span>':'');
+      btn.addEventListener('click',function(){
+        // Deselect all
+        list.querySelectorAll('button').forEach(function(b){
+          b.style.background='transparent';
+          b.style.color='#f5f0e8';
+        });
+        // Select this one
+        btn.style.background='rgba(82,183,136,0.2)';
+        btn.style.color='#52b788';
+        selectedWinner=clean;
+        document.getElementById('winner-msg').textContent='';
+        // Show confirm button
+        document.getElementById('winner-confirm-btn').style.display='block';
+      });
+      list.appendChild(btn);
     });
-  }).catch(function(){});
+  });
+
+  // Confirm button below list
+  var confirmBtn=document.createElement('button');
+  confirmBtn.id='winner-confirm-btn';
+  confirmBtn.className='btn-green';
+  confirmBtn.style.display='none';
+  confirmBtn.style.marginTop='0.75rem';
+  confirmBtn.textContent='Confirm Winner ♠';
+  confirmBtn.onclick=confirmWinner;
+  list.parentNode.insertBefore(confirmBtn,document.getElementById('winner-msg'));
 }
 
 function confirmWinner(){
-  var name=document.getElementById('winner-select').value;
-  if(!name){
+  if(!selectedWinner){
     var m=document.getElementById('winner-msg');
-    m.textContent='Please select a winner.';m.style.color='#e07070';return;
+    m.textContent='Tap a name first.';m.style.color='#e07070';return;
   }
-  // Strip the ★ suffix if selected from last game section
-  name=name.replace(' ★','').trim();
-  document.getElementById('f-food').value=name;
+  document.getElementById('f-food').value=selectedWinner;
   document.getElementById('winner-section').style.display='none';
   document.getElementById('admin-section').style.display='block';
-  loadCurrent(name);
+  loadCurrent(selectedWinner);
 }
 
 async function loadCurrent(winnerOverride){
