@@ -5,311 +5,223 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Poker Night Admin</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;600&display=swap');
-
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    min-height: 100vh;
-    background-color: #1a472a;
-    background-image:
-      repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(0,0,0,0.08) 40px, rgba(0,0,0,0.08) 41px),
-      repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(0,0,0,0.08) 40px, rgba(0,0,0,0.08) 41px);
-    font-family: 'Inter', sans-serif;
-    color: #f5f0e8;
-    padding: 2rem 1rem 4rem;
-  }
-
-  .wrap { max-width: 480px; margin: 0 auto; }
-
-  .suits {
-    text-align: center;
-    font-size: 1.5rem;
-    letter-spacing: 0.5rem;
-    margin-bottom: 0.5rem;
-    opacity: 0.6;
-  }
-  .suits .red { color: #e63946; }
-
-  h1 {
-    font-family: 'Playfair Display', serif;
-    font-size: 2rem;
-    font-weight: 900;
-    text-align: center;
-    color: #f5d87a;
-    margin-bottom: 0.25rem;
-    text-shadow: 0 2px 8px rgba(0,0,0,0.4);
-  }
-
-  .tagline {
-    text-align: center;
-    font-size: 0.8rem;
-    color: rgba(245,240,232,0.5);
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    margin-bottom: 1.75rem;
-  }
-
-  .card {
-    background: rgba(0,0,0,0.35);
-    border: 1px solid rgba(245,216,122,0.25);
-    border-radius: 12px;
-    padding: 1.5rem;
-    margin-bottom: 1.25rem;
-  }
-
-  .card h2 {
-    font-family: 'Playfair Display', serif;
-    font-size: 1.1rem;
-    color: #f5d87a;
-    margin-bottom: 1.25rem;
-  }
-
-  .field { margin-bottom: 1rem; }
-  .field:last-child { margin-bottom: 0; }
-
-  label {
-    display: block;
-    font-size: 0.72rem;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: #f5d87a;
-    font-weight: 600;
-    margin-bottom: 0.35rem;
-  }
-
-  input[type="text"],
-  input[type="password"] {
-    width: 100%;
-    background: rgba(255,255,255,0.08);
-    border: 1px solid rgba(245,216,122,0.3);
-    border-radius: 8px;
-    padding: 0.7rem 1rem;
-    color: #f5f0e8;
-    font-family: 'Inter', sans-serif;
-    font-size: 0.95rem;
-    outline: none;
-    transition: border-color 0.2s;
-  }
-  input::placeholder { color: rgba(245,240,232,0.3); }
-  input:focus { border-color: #f5d87a; }
-
-  .btn-save {
-    width: 100%;
-    background: #2d6a4f;
-    color: #f5f0e8;
-    border: 1px solid #52b788;
-    border-radius: 8px;
-    padding: 0.8rem;
-    font-family: 'Inter', sans-serif;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: opacity 0.15s, transform 0.1s;
-    margin-top: 0.5rem;
-  }
-  .btn-save:hover { opacity: 0.88; }
-  .btn-save:active { transform: scale(0.97); }
-  .btn-save:disabled { opacity: 0.5; cursor: not-allowed; }
-
-  .btn-login {
-    width: 100%;
-    background: #2d6a4f;
-    color: #f5f0e8;
-    border: 1px solid #52b788;
-    border-radius: 8px;
-    padding: 0.8rem;
-    font-family: 'Inter', sans-serif;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: opacity 0.15s;
-    margin-top: 0.75rem;
-  }
-  .btn-login:hover { opacity: 0.88; }
-
-  .btn-clear {
-    width: 100%;
-    background: rgba(180,40,40,0.4);
-    color: #f5f0e8;
-    border: 1px solid rgba(230,80,80,0.5);
-    border-radius: 8px;
-    padding: 0.65rem;
-    font-family: 'Inter', sans-serif;
-    font-size: 0.88rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: opacity 0.15s;
-    margin-top: 0.6rem;
-  }
-  .btn-clear:hover { opacity: 0.88; }
-
-  .message {
-    text-align: center;
-    font-size: 0.88rem;
-    min-height: 1.2em;
-    margin-top: 0.75rem;
-    color: #f5d87a;
-  }
-
-  .rsvp-link {
-    text-align: center;
-    margin-top: 1rem;
-    font-size: 0.85rem;
-    color: rgba(245,240,232,0.5);
-  }
-  .rsvp-link a { color: #f5d87a; }
-
-  #login-screen { display: block; }
-  #admin-screen { display: none; }
+body {
+  min-height: 100vh;
+  background-color: #1a472a;
+  font-family: Arial, sans-serif;
+  color: #f5f0e8;
+  padding: 2rem 1rem;
+  margin: 0;
+}
+.wrap {
+  max-width: 480px;
+  margin: 0 auto;
+}
+h1 {
+  text-align: center;
+  color: #f5d87a;
+  font-size: 2rem;
+  margin-bottom: 0.25rem;
+}
+p.sub {
+  text-align: center;
+  color: rgba(245,240,232,0.5);
+  font-size: 0.8rem;
+  margin-bottom: 2rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.card {
+  background: rgba(0,0,0,0.4);
+  border: 1px solid rgba(245,216,122,0.3);
+  border-radius: 10px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+h2 {
+  color: #f5d87a;
+  margin: 0 0 1.25rem;
+  font-size: 1.1rem;
+}
+label {
+  display: block;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #f5d87a;
+  margin-bottom: 0.3rem;
+  margin-top: 0.9rem;
+}
+label:first-of-type {
+  margin-top: 0;
+}
+input {
+  width: 100%;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(245,216,122,0.3);
+  border-radius: 6px;
+  padding: 0.65rem 0.9rem;
+  color: #f5f0e8;
+  font-size: 0.95rem;
+  box-sizing: border-box;
+}
+input:focus {
+  outline: none;
+  border-color: #f5d87a;
+}
+.btn-green {
+  width: 100%;
+  margin-top: 1.25rem;
+  background: #2d6a4f;
+  color: #f5f0e8;
+  border: 1px solid #52b788;
+  border-radius: 6px;
+  padding: 0.75rem;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+.btn-green:hover { opacity: 0.85; }
+.btn-red {
+  width: 100%;
+  margin-top: 0.75rem;
+  background: rgba(180,40,40,0.5);
+  color: #f5f0e8;
+  border: 1px solid rgba(230,80,80,0.5);
+  border-radius: 6px;
+  padding: 0.65rem;
+  font-size: 0.9rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+.btn-red:hover { opacity: 0.85; }
+.msg {
+  text-align: center;
+  margin-top: 0.75rem;
+  font-size: 0.88rem;
+  min-height: 1.2em;
+  color: #f5d87a;
+}
+#admin-section { display: none; }
 </style>
 </head>
 <body>
 <div class="wrap">
-
-  <div class="suits">
-    <span class="red">♥</span> ♠ <span class="red">♦</span> ♣
-  </div>
   <h1>Poker Night</h1>
-  <p class="tagline">Admin Panel</p>
+  <p class="sub">Admin Panel</p>
 
-  <!-- LOGIN -->
-  <div id="login-screen" class="card">
+  <div id="login-section" class="card">
     <h2>Commissioner Access</h2>
-    <div class="field">
-      <label>Password</label>
-      <input type="password" id="password-input" placeholder="Enter password" onkeydown="if(event.key==='Enter')login()" />
-    </div>
-    <button class="btn-login" onclick="login()">Enter</button>
-    <div class="message" id="login-msg"></div>
+    <label>Password</label>
+    <input type="password" id="pw" placeholder="Enter password" />
+    <button class="btn-green" onclick="login()">Enter</button>
+    <div class="msg" id="login-msg"></div>
   </div>
 
-  <!-- ADMIN FORM -->
-  <div id="admin-screen" class="card">
+  <div id="admin-section" class="card">
     <h2>Update Game Details</h2>
-
-    <div class="field">
-      <label>Date</label>
-      <input type="text" id="f-date" placeholder="e.g. Wednesday, August 19" />
-    </div>
-    <div class="field">
-      <label>Host Name</label>
-      <input type="text" id="f-host" placeholder="e.g. Randy LeClaire" />
-    </div>
-    <div class="field">
-      <label>Address</label>
-      <input type="text" id="f-address" placeholder="e.g. 123 Main St, Morgan Hill, CA" />
-    </div>
-    <div class="field">
-      <label>Start Time</label>
-      <input type="text" id="f-time" placeholder="e.g. 6:00 PM – 11:00 PM" />
-    </div>
-    <div class="field">
-      <label>Food (last winner)</label>
-      <input type="text" id="f-food" placeholder="e.g. Dennis Montero" />
-    </div>
-
-    <button class="btn-save" id="save-btn" onclick="saveDetails()">♠ Update the Table</button>
-    <button class="btn-clear" onclick="clearRsvps()">Clear RSVP List for New Game</button>
-    <div class="message" id="admin-msg"></div>
+    <label>Date</label>
+    <input type="text" id="f-date" placeholder="e.g. Wednesday, August 19" />
+    <label>Host Name</label>
+    <input type="text" id="f-host" placeholder="e.g. Randy LeClaire" />
+    <label>Address</label>
+    <input type="text" id="f-address" placeholder="e.g. 123 Main St, Morgan Hill, CA" />
+    <label>Time</label>
+    <input type="text" id="f-time" placeholder="e.g. 6:00 PM - 11:00 PM" />
+    <label>Food (last winner's name)</label>
+    <input type="text" id="f-food" placeholder="e.g. Dennis Montero" />
+    <button class="btn-green" onclick="saveDetails()">Save Game Details</button>
+    <button class="btn-red" onclick="clearRsvps()">Clear RSVP List for New Game</button>
+    <div class="msg" id="admin-msg"></div>
   </div>
-
-  <div class="rsvp-link" id="rsvp-link" style="display:none;">
-    <a href="index.html">View the RSVP Page →</a>
-  </div>
-
 </div>
 
 <script>
-  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz0-b_wivdSlEUA4OAjEzW3d3aP1bLbKUT4b554jtI8QNZtwWrHfmLWaSRPnDQocTonRg/exec';
-  const PASSWORD = 'Poker26';
+var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz0-b_wivdSlEUA4OAjEzW3d3aP1bLbKUT4b554jtI8QNZtwWrHfmLWaSRPnDQocTonRg/exec';
+var PASSWORD = 'Poker26';
 
-  function login() {
-    const pw = document.getElementById('password-input').value;
-    if (pw === PASSWORD) {
-      document.getElementById('login-screen').style.display = 'none';
-      document.getElementById('admin-screen').style.display = 'block';
-      document.getElementById('rsvp-link').style.display = 'block';
-      loadCurrent();
+function login() {
+  var pw = document.getElementById('pw').value;
+  if (pw === PASSWORD) {
+    document.getElementById('login-section').style.display = 'none';
+    document.getElementById('admin-section').style.display = 'block';
+    loadCurrent();
+  } else {
+    document.getElementById('login-msg').textContent = 'Wrong password. Try again.';
+    document.getElementById('login-msg').style.color = '#e07070';
+  }
+}
+
+document.getElementById('pw').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') login();
+});
+
+function loadCurrent() {
+  fetch(SCRIPT_URL + '?action=getSettings')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var s = data.settings || {};
+      document.getElementById('f-date').value = s.date || '';
+      document.getElementById('f-host').value = s.host || '';
+      document.getElementById('f-address').value = s.address || '';
+      document.getElementById('f-time').value = s.time || '';
+      document.getElementById('f-food').value = s.food || '';
+    })
+    .catch(function() {});
+}
+
+function saveDetails() {
+  var msg = document.getElementById('admin-msg');
+  msg.style.color = 'rgba(245,240,232,0.5)';
+  msg.textContent = 'Saving...';
+  var settings = {
+    date: document.getElementById('f-date').value.trim(),
+    host: document.getElementById('f-host').value.trim(),
+    address: document.getElementById('f-address').value.trim(),
+    time: document.getElementById('f-time').value.trim(),
+    food: document.getElementById('f-food').value.trim()
+  };
+  fetch(SCRIPT_URL, {
+    method: 'POST',
+    body: JSON.stringify({ action: 'saveSettings', settings: settings })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.success) {
+      msg.style.color = '#52b788';
+      msg.textContent = 'Done! RSVP page is updated.';
     } else {
-      document.getElementById('login-msg').textContent = 'Wrong password. Try again.';
-      document.getElementById('login-msg').style.color = '#e07070';
-    }
-  }
-
-  async function loadCurrent() {
-    try {
-      const res = await fetch(SCRIPT_URL + '?action=getSettings');
-      const data = await res.json();
-      if (data.settings) {
-        document.getElementById('f-date').value = data.settings.date || '';
-        document.getElementById('f-host').value = data.settings.host || '';
-        document.getElementById('f-address').value = data.settings.address || '';
-        document.getElementById('f-time').value = data.settings.time || '';
-        document.getElementById('f-food').value = data.settings.food || '';
-      }
-    } catch(e) {}
-  }
-
-  async function saveDetails() {
-    const btn = document.getElementById('save-btn');
-    const msg = document.getElementById('admin-msg');
-    btn.disabled = true;
-    msg.textContent = 'Saving...';
-    msg.style.color = 'rgba(245,240,232,0.5)';
-
-    const settings = {
-      date: document.getElementById('f-date').value.trim(),
-      host: document.getElementById('f-host').value.trim(),
-      address: document.getElementById('f-address').value.trim(),
-      time: document.getElementById('f-time').value.trim(),
-      food: document.getElementById('f-food').value.trim()
-    };
-
-    try {
-      const res = await fetch(SCRIPT_URL, {
-        method: 'POST',
-        body: JSON.stringify({ action: 'saveSettings', settings })
-      });
-      const data = await res.json();
-      if (data.success) {
-        msg.textContent = 'Done! The RSVP page is updated.';
-        msg.style.color = '#52b788';
-      } else {
-        msg.textContent = 'Something went wrong. Try again.';
-        msg.style.color = '#e07070';
-      }
-    } catch(e) {
-      msg.textContent = 'Could not connect. Check your internet.';
       msg.style.color = '#e07070';
+      msg.textContent = 'Something went wrong. Try again.';
     }
+  })
+  .catch(function() {
+    msg.style.color = '#e07070';
+    msg.textContent = 'Could not connect. Check your internet.';
+  });
+}
 
-    btn.disabled = false;
-    setTimeout(() => { msg.textContent = ''; }, 4000);
-  }
-
-  async function clearRsvps() {
-    if (!confirm('Clear the entire RSVP list for the new game?')) return;
-    const msg = document.getElementById('admin-msg');
-    msg.textContent = 'Clearing...';
-    msg.style.color = 'rgba(245,240,232,0.5)';
-
-    try {
-      const res = await fetch(SCRIPT_URL, {
-        method: 'POST',
-        body: JSON.stringify({ action: 'clearRsvps' })
-      });
-      const data = await res.json();
-      if (data.success) {
-        msg.textContent = 'RSVP list cleared. Fresh start!';
-        msg.style.color = '#52b788';
-      }
-    } catch(e) {
-      msg.textContent = 'Could not connect. Try again.';
-      msg.style.color = '#e07070';
+function clearRsvps() {
+  if (!confirm('Clear the entire RSVP list for the new game?')) return;
+  var msg = document.getElementById('admin-msg');
+  msg.style.color = 'rgba(245,240,232,0.5)';
+  msg.textContent = 'Clearing...';
+  fetch(SCRIPT_URL, {
+    method: 'POST',
+    body: JSON.stringify({ action: 'clearRsvps' })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.success) {
+      msg.style.color = '#52b788';
+      msg.textContent = 'RSVP list cleared. Fresh start!';
     }
-    setTimeout(() => { msg.textContent = ''; }, 4000);
-  }
+  })
+  .catch(function() {
+    msg.style.color = '#e07070';
+    msg.textContent = 'Could not connect. Try again.';
+  });
+}
 </script>
 </body>
 </html>
