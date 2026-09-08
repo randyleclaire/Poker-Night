@@ -38,7 +38,6 @@
     text-align: center;
     color: #f5d87a;
     line-height: 1.1;
-    letter-spacing: -0.5px;
     text-shadow: 0 2px 8px rgba(0,0,0,0.4);
     margin-bottom: 0.25rem;
   }
@@ -101,15 +100,10 @@
     outline: none;
     transition: border-color 0.2s;
   }
-  input[type="text"]::placeholder { color: rgba(245,240,232,0.35); }
-  input[type="text"]:focus { border-color: #f5d87a; }
+  input::placeholder { color: rgba(245,240,232,0.35); }
+  input:focus { border-color: #f5d87a; }
 
-  .btn-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.6rem;
-    margin-bottom: 0.75rem;
-  }
+  .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; margin-bottom: 0.75rem; }
 
   .btn {
     padding: 0.7rem;
@@ -126,7 +120,6 @@
 
   .btn-in { background: #2d6a4f; color: #f5f0e8; border: 1px solid #52b788; }
   .btn-in:hover:not(:disabled) { opacity: 0.88; }
-
   .btn-out { background: rgba(180,40,40,0.4); color: #f5f0e8; border: 1px solid rgba(230,80,80,0.5); }
   .btn-out:hover:not(:disabled) { opacity: 0.88; }
 
@@ -140,17 +133,10 @@
     font-family: 'Inter', sans-serif;
     font-size: 0.8rem;
     cursor: pointer;
-    transition: opacity 0.15s;
   }
   .btn-optout:hover { opacity: 0.7; }
 
-  .message {
-    font-size: 0.85rem;
-    text-align: center;
-    min-height: 1.2em;
-    color: #f5d87a;
-    margin-top: 0.5rem;
-  }
+  .message { font-size: 0.85rem; text-align: center; min-height: 1.2em; color: #f5d87a; margin-top: 0.5rem; }
 
   .attendee-list { list-style: none; }
 
@@ -165,90 +151,35 @@
   .attendee-item:last-child { border-bottom: none; }
 
   .attendee-name { display: flex; align-items: center; gap: 0.5rem; }
-
   .status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
   .dot-in { background: #52b788; }
   .dot-out { background: #e63946; }
 
-  .status-badge {
-    font-size: 0.7rem;
-    padding: 0.15rem 0.5rem;
-    border-radius: 20px;
-    font-weight: 600;
-    letter-spacing: 0.05em;
-  }
+  .status-badge { font-size: 0.7rem; padding: 0.15rem 0.5rem; border-radius: 20px; font-weight: 600; }
   .badge-in { background: rgba(82,183,136,0.2); color: #52b788; }
   .badge-out { background: rgba(230,57,70,0.2); color: #e07070; }
 
-  .empty-state {
-    text-align: center;
-    color: rgba(245,240,232,0.35);
-    font-size: 0.88rem;
-    padding: 1rem 0;
-  }
-
-  .loading-state {
-    text-align: center;
-    color: rgba(245,240,232,0.5);
-    font-size: 0.88rem;
-    padding: 1rem 0;
-  }
+  .empty-state { text-align: center; color: rgba(245,240,232,0.35); font-size: 0.88rem; padding: 1rem 0; }
 
   .opted-out-section { margin-top: 1rem; }
-  .opted-out-label {
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: rgba(245,240,232,0.35);
-    margin-bottom: 0.5rem;
-  }
-  .opted-out-item {
-    font-size: 0.82rem;
-    color: rgba(245,240,232,0.35);
-    padding: 0.25rem 0;
-    text-decoration: line-through;
-  }
+  .opted-out-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(245,240,232,0.35); margin-bottom: 0.5rem; }
+  .opted-out-item { font-size: 0.82rem; color: rgba(245,240,232,0.35); padding: 0.25rem 0; text-decoration: line-through; }
 
-  .count-badge {
-    display: inline-block;
-    background: rgba(245,216,122,0.15);
-    color: #f5d87a;
-    font-size: 0.7rem;
-    padding: 0.1rem 0.5rem;
-    border-radius: 20px;
-    margin-left: 0.5rem;
-    font-family: 'Inter', sans-serif;
-    font-weight: 600;
-  }
+  .count-badge { display: inline-block; background: rgba(245,216,122,0.15); color: #f5d87a; font-size: 0.7rem; padding: 0.1rem 0.5rem; border-radius: 20px; margin-left: 0.5rem; font-weight: 600; }
 </style>
 </head>
 <body>
 <div class="felt-table">
 
-  <div class="suits">
-    <span class="red">♥</span> ♠ <span class="red">♦</span> ♣
-  </div>
-
+  <div class="suits"><span class="red">♥</span> ♠ <span class="red">♦</span> ♣</div>
   <h1>Poker Night</h1>
   <p class="tagline">Morgan Hill Poker Society &mdash; Unofficial</p>
 
   <div class="info-card">
-    <div class="info-row">
-      <span class="info-label">When</span>
-      <span class="info-value">Wednesday, July 8</span>
-    </div>
-    <div class="info-row">
-      <span class="info-label">Where</span>
-      <span class="info-value">Mark Nagel's &mdash; 10098 Walter Welsher Ct, Gilroy, CA</span>
-    </div>
-    <div class="info-row">
-      <span class="info-label">Time</span>
-      <span class="info-value">6:00 PM &ndash; 11:00 PM</span>
-    </div>
-    <div class="info-row">
-      <span class="info-label">Grub</span>
-      <span class="info-value">Dennis Montero (last winner, winner, something for dinner!)</span>
-    </div>
+    <div class="info-row"><span class="info-label">When</span><span class="info-value" id="g-date">Loading...</span></div>
+    <div class="info-row"><span class="info-label">Where</span><span class="info-value" id="g-host">Loading...</span></div>
+    <div class="info-row"><span class="info-label">Time</span><span class="info-value" id="g-time">Loading...</span></div>
+    <div class="info-row"><span class="info-label">Grub</span><span class="info-value" id="g-food">Loading...</span></div>
   </div>
 
   <div class="rsvp-card">
@@ -265,7 +196,7 @@
   <div class="list-card">
     <h2>Who's Coming <span class="count-badge" id="count-badge">...</span></h2>
     <ul class="attendee-list" id="attendee-list">
-      <li class="loading-state">Loading the table...</li>
+      <li class="empty-state">Loading the table...</li>
     </ul>
     <div class="opted-out-section" id="opted-out-section" style="display:none;">
       <div class="opted-out-label">Opted out of texts</div>
@@ -276,17 +207,10 @@
 </div>
 
 <script>
-  // *** PASTE YOUR GOOGLE APPS SCRIPT WEB APP URL HERE ***
   const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz0-b_wivdSlEUA4OAjEzW3d3aP1bLbKUT4b554jtI8QNZtwWrHfmLWaSRPnDQocTonRg/exec';
 
-  const GAME_DATE = 'Wednesday, July 8';
-
   function escHtml(str) {
-    return String(str)
-      .replace(/&/g,'&amp;')
-      .replace(/</g,'&lt;')
-      .replace(/>/g,'&gt;')
-      .replace(/"/g,'&quot;');
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
   function showMsg(text, color) {
@@ -301,8 +225,18 @@
     document.getElementById('btn-out').disabled = disabled;
   }
 
-  function getName() {
-    return document.getElementById('name-input').value.trim();
+  function getName() { return document.getElementById('name-input').value.trim(); }
+
+  async function loadSettings() {
+    try {
+      const res = await fetch(SCRIPT_URL + '?action=getSettings');
+      const data = await res.json();
+      const s = data.settings || {};
+      document.getElementById('g-date').textContent = s.date || 'TBD';
+      document.getElementById('g-host').textContent = (s.host || '') + (s.address ? ' — ' + s.address : '');
+      document.getElementById('g-time').textContent = s.time || '6:00 PM – 11:00 PM';
+      document.getElementById('g-food').textContent = s.food ? s.food + ' (last winner, winner, something for dinner!)' : 'TBD';
+    } catch(e) {}
   }
 
   async function loadList() {
@@ -310,9 +244,8 @@
       const res = await fetch(SCRIPT_URL + '?action=getAll');
       const data = await res.json();
       renderList(data);
-    } catch (err) {
-      document.getElementById('attendee-list').innerHTML =
-        '<li class="empty-state">Could not load RSVPs. Check your connection.</li>';
+    } catch(e) {
+      document.getElementById('attendee-list').innerHTML = '<li class="empty-state">Could not load RSVPs.</li>';
     }
   }
 
@@ -321,10 +254,8 @@
     const optedOutSection = document.getElementById('opted-out-section');
     const optedOutList = document.getElementById('opted-out-list');
     const countBadge = document.getElementById('count-badge');
-
     const inCount = (data.attendees || []).filter(a => a.status === 'in').length;
     countBadge.textContent = inCount + ' in';
-
     if (!data.attendees || data.attendees.length === 0) {
       list.innerHTML = '<li class="empty-state">No RSVPs yet — don\'t be the last to fold.</li>';
     } else {
@@ -334,18 +265,12 @@
             <span class="status-dot ${a.status === 'in' ? 'dot-in' : 'dot-out'}"></span>
             ${escHtml(a.name)}
           </span>
-          <span class="status-badge ${a.status === 'in' ? 'badge-in' : 'badge-out'}">
-            ${a.status === 'in' ? 'In' : 'Out'}
-          </span>
-        </li>
-      `).join('');
+          <span class="status-badge ${a.status === 'in' ? 'badge-in' : 'badge-out'}">${a.status === 'in' ? 'In' : 'Out'}</span>
+        </li>`).join('');
     }
-
     if (data.optedOut && data.optedOut.length > 0) {
       optedOutSection.style.display = 'block';
-      optedOutList.innerHTML = data.optedOut.map(n =>
-        `<div class="opted-out-item">${escHtml(n)}</div>`
-      ).join('');
+      optedOutList.innerHTML = data.optedOut.map(n => `<div class="opted-out-item">${escHtml(n)}</div>`).join('');
     } else {
       optedOutSection.style.display = 'none';
     }
@@ -354,60 +279,43 @@
   async function rsvp(status) {
     const name = getName();
     if (!name) { showMsg('Enter your name first, friend.', '#e07070'); return; }
-
     setButtons(true);
     showMsg('Saving...', 'rgba(245,240,232,0.5)');
-
     try {
       const res = await fetch(SCRIPT_URL, {
         method: 'POST',
-        body: JSON.stringify({ action: 'rsvp', name, status, gameDate: GAME_DATE })
+        body: JSON.stringify({ action: 'rsvp', name, status, gameDate: document.getElementById('g-date').textContent })
       });
       const data = await res.json();
-
       if (data.success) {
         showMsg(status === 'in' ? "You're in! Don't be late." : "Noted. Your chips will be missed.");
         document.getElementById('name-input').value = '';
         await loadList();
-      } else {
-        showMsg('Something went wrong. Try again.', '#e07070');
-      }
-    } catch (err) {
-      showMsg('Could not save. Check your connection.', '#e07070');
-    }
-
+      } else { showMsg('Something went wrong. Try again.', '#e07070'); }
+    } catch(e) { showMsg('Could not save. Check your connection.', '#e07070'); }
     setButtons(false);
   }
 
   async function optOut() {
     const name = getName();
     if (!name) { showMsg('Enter your name to opt out.', '#e07070'); return; }
-
     setButtons(true);
-    showMsg('Removing you...', 'rgba(245,240,232,0.5)');
-
     try {
       const res = await fetch(SCRIPT_URL, {
         method: 'POST',
-        body: JSON.stringify({ action: 'optout', name, gameDate: GAME_DATE })
+        body: JSON.stringify({ action: 'optout', name })
       });
       const data = await res.json();
-
       if (data.success) {
         showMsg("You're off the list. Take care out there.", 'rgba(245,240,232,0.5)');
         document.getElementById('name-input').value = '';
         await loadList();
-      } else {
-        showMsg('Something went wrong. Try again.', '#e07070');
       }
-    } catch (err) {
-      showMsg('Could not save. Check your connection.', '#e07070');
-    }
-
+    } catch(e) { showMsg('Could not save. Try again.', '#e07070'); }
     setButtons(false);
   }
 
-  // Load on page open, then refresh every 30 seconds
+  loadSettings();
   loadList();
   setInterval(loadList, 30000);
 </script>
