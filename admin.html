@@ -247,13 +247,10 @@ textarea { resize: vertical; min-height: 65px; }
   <!-- WINNER QUESTION -->
   <div id="winner-section" class="card" style="display:none">
     <h2>Who won last poker night?</h2>
-    <label>Select from last game's attendees or type a name</label>
-    <div class="winner-row">
-      <select id="winner-select" onchange="winnerSelected()">
-        <option value="">-- Select a player --</option>
-      </select>
-      <input type="text" id="winner-text" placeholder="Or type name"/>
-    </div>
+    <label>Select from the poker group</label>
+    <select id="winner-select">
+      <option value="">-- Select the winner --</option>
+    </select>
     <button class="btn-green" onclick="confirmWinner()">Confirm Winner ♠</button>
     <div class="msg" id="winner-msg"></div>
   </div>
@@ -328,30 +325,44 @@ function login(){
 }
 document.getElementById('pw').addEventListener('keydown',function(e){if(e.key==='Enter')login();});
 
-async function loadLastAttendees(){
-  try{
-    var res=await fetch(SCRIPT_URL+'?action=getAll');
-    var data=await res.json();
-    var sel=document.getElementById('winner-select');
-    var inPlayers=(data.attendees||[]).filter(function(a){return a.status==='in';});
-    inPlayers.forEach(function(a){
-      var opt=document.createElement('option');
-      opt.value=a.name;opt.textContent=a.name;sel.appendChild(opt);
-    });
-  }catch(e){}
-}
+var CONTACTS=[
+  'Billy Miller','Dennis Brown','Dennis Montero','Eddie Estavillo',
+  'Fernando Vasquez','Grant LeClaire','Greg Davis','Kyle Brown',
+  'Mark Nagel','Pete Farrell','Randy LeClaire','Sean Davis',
+  'Seth Brown','Bill Yeager'
+].sort();
 
-function winnerSelected(){
-  var val=document.getElementById('winner-select').value;
-  if(val)document.getElementById('winner-text').value=val;
+function loadLastAttendees(){
+  var sel=document.getElementById('winner-select');
+  while(sel.options.length>1)sel.remove(1);
+  CONTACTS.forEach(function(name){
+    var opt=document.createElement('option');
+    opt.value=name;opt.textContent=name;sel.appendChild(opt);
+  });
+  // Also try to fetch last game attendees and mark them
+  fetch(SCRIPT_URL+'?action=getAll').then(function(r){return r.json();}).then(function(data){
+    var inPlayers=(data.attendees||[]).filter(function(a){return a.status==='in';}).map(function(a){return a.name;});
+    if(!inPlayers.length)return;
+    // Add a divider and last game players at top for convenience
+    var divider=document.createElement('option');
+    divider.disabled=true;divider.textContent='── Last game attendees ──';
+    sel.insertBefore(divider,sel.options[1]);
+    inPlayers.forEach(function(name){
+      var opt=document.createElement('option');
+      opt.value=name;opt.textContent=name+' ★';
+      sel.insertBefore(opt,divider);
+    });
+  }).catch(function(){});
 }
 
 function confirmWinner(){
-  var name=document.getElementById('winner-text').value.trim()||document.getElementById('winner-select').value;
+  var name=document.getElementById('winner-select').value;
   if(!name){
     var m=document.getElementById('winner-msg');
-    m.textContent='Please select or type a name.';m.style.color='#e07070';return;
+    m.textContent='Please select a winner.';m.style.color='#e07070';return;
   }
+  // Strip the ★ suffix if selected from last game section
+  name=name.replace(' ★','').trim();
   document.getElementById('f-food').value=name;
   document.getElementById('winner-section').style.display='none';
   document.getElementById('admin-section').style.display='block';
