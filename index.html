@@ -500,8 +500,22 @@ async function loadSettings(){
     var res=await fetch(SCRIPT_URL+'?action=getSettings');
     var data=await res.json();
     var s=data.settings||{};
-    document.getElementById('g-date').textContent=s.date||'TBD';
-    document.getElementById('g-host').textContent=(s.host||'')+(s.address?' — '+s.address:'');
+    // Format date: if it already starts with a day name, show as-is; otherwise try to prepend day
+    var dateStr=s.date||'TBD';
+    var days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    var startsWithDay=days.some(function(d){return dateStr.startsWith(d);});
+    if(!startsWithDay&&dateStr!=='TBD'){
+      var parsed=new Date(dateStr+'T12:00:00');
+      if(!isNaN(parsed))dateStr=days[parsed.getDay()]+', '+dateStr;
+    }
+    document.getElementById('g-date').textContent=dateStr;
+    // Where: show host and address separately if both present
+    var hostStr='';
+    if(s.host&&s.address)hostStr=s.host+' — '+s.address;
+    else if(s.host)hostStr=s.host;
+    else if(s.address)hostStr=s.address;
+    else hostStr='TBD';
+    document.getElementById('g-host').textContent=hostStr;
     document.getElementById('g-time').textContent=s.time||'6:00 PM – 11:00 PM';
     document.getElementById('g-food').textContent=s.food?s.food+' (last winner, winner, something for dinner!)':'TBD';
     if(s.note){var nb=document.getElementById('note-banner');nb.textContent=s.note;nb.style.display='block';}
