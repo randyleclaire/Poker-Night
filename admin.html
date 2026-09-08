@@ -298,6 +298,13 @@ textarea { resize: vertical; min-height: 65px; }
     <div class="msg" id="admin-msg"></div>
   </div>
 
+  <!-- Send Text -->
+  <div class="card" style="text-align:center;">
+    <h2 style="margin-bottom:0.6rem;">Send Game Info</h2>
+    <p style="font-size:0.82rem;color:rgba(245,240,232,0.55);margin-bottom:1rem;">Opens your SMS app pre-filled with the game details and RSVP link.</p>
+    <button onclick="sendText()" style="width:100%;background:linear-gradient(135deg,#2d6a4f,#3a8a65);color:#f5f0e8;border:1px solid #52b788;border-radius:7px;padding:0.78rem;font-family:Inter,sans-serif;font-size:0.97rem;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.3);">📱 Send Text to Group</button>
+  </div>
+
   <div class="footer-links">
     <a href="index.html">← Back to RSVP Page</a>
   </div>
@@ -468,6 +475,20 @@ function saveDetails(){
     else{msg.style.color='#e07070';msg.textContent='Something went wrong. Try again.';}
   })
   .catch(function(){msg.style.color='#e07070';msg.textContent='Could not connect. Check your internet.';});
+}
+
+function sendText(){
+  var date=document.getElementById('f-date-select').value==='custom'
+    ?document.getElementById('day-label').textContent
+    :document.getElementById('f-date-select').value;
+  var host=(document.getElementById('f-host').value||'').trim();
+  var addr=(document.getElementById('f-address').value||'').trim();
+  var time=document.getElementById('f-time').value||'6:00 PM – 11:00 PM';
+  var food=(document.getElementById('f-food').value||'TBD').trim();
+  var where=host&&addr?host+' — '+addr:host||addr||'TBD';
+  var link='https://randyleclaire.github.io/Poker-Night';
+  var msg='🃏 Poker Night!\n📅 '+(date||'TBD')+'\n📍 '+where+'\n⏰ '+time+'\n🍽 Grub: '+food+' (last winner, winner, something for dinner!)\n\nRSVP here: '+link;
+  window.open('sms:?&body='+encodeURIComponent(msg));
 }
 
 function clearRsvps(){
