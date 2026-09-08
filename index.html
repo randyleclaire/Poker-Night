@@ -500,13 +500,21 @@ async function loadSettings(){
     var res=await fetch(SCRIPT_URL+'?action=getSettings');
     var data=await res.json();
     var s=data.settings||{};
-    // Format date: if it already starts with a day name, show as-is; otherwise try to prepend day
+    // Format date — handle ISO timestamps from Google Sheets OR plain text
     var dateStr=s.date||'TBD';
     var days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-    var startsWithDay=days.some(function(d){return dateStr.startsWith(d);});
-    if(!startsWithDay&&dateStr!=='TBD'){
-      var parsed=new Date(dateStr+'T12:00:00');
-      if(!isNaN(parsed))dateStr=days[parsed.getDay()]+', '+dateStr;
+    var months=['January','February','March','April','May','June','July','August','September','October','November','December'];
+    if(dateStr!=='TBD'){
+      var startsWithDay=days.some(function(d){return dateStr.startsWith(d);});
+      if(!startsWithDay){
+        // Try parsing — works for ISO strings and plain dates
+        var parsed=new Date(dateStr);
+        if(!isNaN(parsed)){
+          // Use UTC values to avoid timezone shifting the date
+          var d=new Date(parsed.getUTCFullYear(),parsed.getUTCMonth(),parsed.getUTCDate());
+          dateStr=days[d.getDay()]+', '+months[d.getMonth()]+' '+d.getDate()+', '+d.getFullYear();
+        }
+      }
     }
     document.getElementById('g-date').textContent=dateStr;
     // Where: show host and address separately if both present
