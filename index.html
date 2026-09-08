@@ -372,8 +372,10 @@ input:focus {
       <button class="btn btn-in" id="btn-in" onclick="rsvp('in')">♠ I'm In</button>
       <button class="btn btn-out" id="btn-out" onclick="rsvp('out')">✕ Can't Make It</button>
     </div>
-    <button class="btn-optout" onclick="optOut()">Remove me from future texts</button>
     <div class="message" id="msg"></div>
+    <div id="cal-wrap" style="margin-top:0.6rem;">
+      <button id="cal-btn" onclick="generateICS()" style="width:100%;background:rgba(82,183,136,0.08);border:1px solid rgba(82,183,136,0.25);border-radius:7px;padding:0.65rem;color:rgba(82,183,136,0.5);font-family:Inter,sans-serif;font-size:0.88rem;font-weight:600;cursor:pointer;transition:all 0.2s;">📅 Add to Calendar</button>
+    </div>
   </div>
 
   <div class="card">
@@ -394,8 +396,32 @@ input:focus {
     <button class="btn-add-contact" onclick="addContact()">+ Add New Player</button>
   </div>
 
+  <!-- Send Text -->
+  <div class="card" style="text-align:center;">
+    <h2 style="margin-bottom:0.6rem;">Send Game Info</h2>
+    <p style="font-size:0.82rem;color:rgba(245,240,232,0.55);margin-bottom:1rem;">Opens your SMS app pre-filled with the game details and RSVP link.</p>
+    <button onclick="sendText()" style="width:100%;background:linear-gradient(135deg,#2d6a4f,#3a8a65);color:#f5f0e8;border:1px solid #52b788;border-radius:7px;padding:0.78rem;font-family:Inter,sans-serif;font-size:0.97rem;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.3);">📱 Send Text to Group</button>
+  </div>
+
+  <!-- Opt Out -->
+  <div style="text-align:center;margin-top:0.5rem;margin-bottom:2rem;">
+    <button onclick="showOptOutModal()" style="background:transparent;border:none;color:rgba(245,240,232,0.3);font-family:Inter,sans-serif;font-size:0.78rem;cursor:pointer;text-decoration:underline;">Remove me from future texts</button>
+  </div>
+
   <div class="footer-links">
     <a href="admin.html">Admin</a>
+  </div>
+</div>
+
+<!-- Opt-Out Modal -->
+<div id="optout-modal" style="display:none;position:fixed;inset:0;z-index:100;background:rgba(0,0,0,0.7);display:none;align-items:center;justify-content:center;padding:1rem;">
+  <div style="background:#1a3d28;border:1px solid rgba(245,216,122,0.3);border-radius:12px;padding:1.5rem;width:100%;max-width:380px;box-shadow:0 8px 32px rgba(0,0,0,0.5);">
+    <h2 style="font-family:'Playfair Display',serif;color:#f5d87a;font-size:1.1rem;margin-bottom:0.5rem;">Remove from Texts</h2>
+    <p style="font-size:0.82rem;color:rgba(245,240,232,0.55);margin-bottom:1rem;">Select your name to be removed from future text notifications.</p>
+    <div id="optout-list" style="max-height:260px;overflow-y:auto;border:1px solid rgba(245,216,122,0.18);border-radius:8px;margin-bottom:1rem;"></div>
+    <div style="display:flex;gap:0.5rem;">
+      <button onclick="closeOptOutModal()" style="flex:1;background:transparent;border:1px solid rgba(245,240,232,0.2);border-radius:7px;padding:0.65rem;color:rgba(245,240,232,0.5);font-family:Inter,sans-serif;font-size:0.88rem;cursor:pointer;">Cancel</button>
+    </div>
   </div>
 </div>
 
@@ -420,8 +446,54 @@ var DEFAULT_CONTACTS=[
 ];
 
 var contacts=JSON.parse(localStorage.getItem('poker-contacts')||'null')||DEFAULT_CONTACTS;
+var optedOutNames=JSON.parse(localStorage.getItem('poker-optedout')||'[]');
 function saveContacts(){localStorage.setItem('poker-contacts',JSON.stringify(contacts));}
+function saveOptedOut(){localStorage.setItem('poker-optedout',JSON.stringify(optedOutNames));}
 function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function sendText(){
+  var date=document.getElementById('g-date').textContent||'TBD';
+  var host=document.getElementById('g-host').textContent||'TBD';
+  var time=document.getElementById('g-time').textContent||'6:00 PM – 11:00 PM';
+  var food=document.getElementById('g-food').textContent||'TBD';
+  var link='https://randyleclaire.github.io/Poker-Night';
+  var msg='🃏 Poker Night!\n📅 '+date+'\n📍 '+host+'\n⏰ '+time+'\n🍽 Grub: '+food+'\n\nRSVP here: '+link;
+  window.open('sms:?&body='+encodeURIComponent(msg));
+}
+
+function showOptOutModal(){
+  var list=document.getElementById('optout-list');
+  list.innerHTML='';
+  contacts.slice().sort(function(a,b){return a.name.localeCompare(b.name);}).forEach(function(c){
+    var isOut=optedOutNames.indexOf(c.name)>=0;
+    var btn=document.createElement('button');
+    btn.type='button';
+    btn.style.cssText='width:100%;text-align:left;background:transparent;border:none;border-bottom:1px solid rgba(245,240,232,0.06);padding:0.7rem 1rem;font-family:Inter,sans-serif;font-size:0.93rem;cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:background 0.15s;'+(isOut?'color:rgba(245,240,232,0.3);text-decoration:line-through;':'color:#f5f0e8;');
+    btn.innerHTML=escHtml(c.name)+(isOut?' <span style="font-size:0.7rem;color:rgba(245,216,122,0.4);">opted out</span>':'');
+    if(!isOut){
+      btn.addEventListener('click',function(){
+        if(!confirm('Remove '+c.name+' from future texts?'))return;
+        optedOutNames.push(c.name);
+        saveOptedOut();
+        renderContacts();
+        showOptOutModal();
+        // Also update Google Sheets
+        fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'optout',name:c.name})}).catch(function(){});
+      });
+    }
+    list.appendChild(btn);
+  });
+  document.getElementById('optout-modal').style.display='flex';
+}
+
+function closeOptOutModal(){
+  document.getElementById('optout-modal').style.display='none';
+}
+
+// Close modal if tapping outside
+document.getElementById('optout-modal').addEventListener('click',function(e){
+  if(e.target===this)closeOptOutModal();
+});
 
 function renderContacts(){
   var q=document.getElementById('contact-search').value.toLowerCase();
@@ -430,19 +502,24 @@ function renderContacts(){
   if(!filtered.length){list.innerHTML='<div class="empty-state">No matches found.</div>';return;}
   list.innerHTML=filtered.map(function(c){
     var i=contacts.indexOf(c);
-    return '<div class="contact-item" id="ci-'+i+'">'
-      +'<div class="contact-name">'+escHtml(c.name)+'</div>'
-      +(c.mobile?'<div class="contact-detail"><a href="tel:'+escHtml(c.mobile)+'">'+escHtml(c.mobile)+'</a></div>':'')
-      +(c.email?'<div class="contact-detail"><a href="mailto:'+escHtml(c.email)+'">'+escHtml(c.email)+'</a></div>':'')
-      +'<button class="btn-edit-contact" onclick="toggleEdit('+i+')">Edit</button>'
-      +'<div class="edit-form" id="ef-'+i+'">'
-      +'<input type="text" id="en-'+i+'" value="'+escHtml(c.name)+'" placeholder="Name"/>'
-      +'<input type="text" id="em-'+i+'" value="'+escHtml(c.mobile)+'" placeholder="Mobile"/>'
-      +'<input type="text" id="ee-'+i+'" value="'+escHtml(c.email)+'" placeholder="Email"/>'
-      +'<div class="edit-btn-row">'
-      +'<button class="btn-save-contact" onclick="saveContact('+i+')">Save</button>'
-      +'<button class="btn-cancel-contact" onclick="toggleEdit('+i+')">Cancel</button>'
-      +'</div></div></div>';
+    var isOut=optedOutNames.indexOf(c.name)>=0;
+    var dimStyle=isOut?'opacity:0.38;':'';
+    var nameStyle=isOut?'text-decoration:line-through;color:rgba(245,240,232,0.4);':'';
+    var badge=isOut?' <span style="font-size:0.65rem;color:rgba(245,216,122,0.4);font-weight:400;">opted out</span>':'';
+    var html='<div class="contact-item" id="ci-'+i+'" style="'+dimStyle+'">';
+    html+='<div class="contact-name" style="'+nameStyle+'">'+escHtml(c.name)+badge+'</div>';
+    if(c.mobile)html+='<div class="contact-detail"><a href="tel:'+escHtml(c.mobile)+'">'+escHtml(c.mobile)+'</a></div>';
+    if(c.email)html+='<div class="contact-detail"><a href="mailto:'+escHtml(c.email)+'">'+escHtml(c.email)+'</a></div>';
+    html+='<button class="btn-edit-contact" onclick="toggleEdit('+i+')">Edit</button>';
+    html+='<div class="edit-form" id="ef-'+i+'">';
+    html+='<input type="text" id="en-'+i+'" value="'+escHtml(c.name)+'" placeholder="Name"/>';
+    html+='<input type="text" id="em-'+i+'" value="'+escHtml(c.mobile)+'" placeholder="Mobile"/>';
+    html+='<input type="text" id="ee-'+i+'" value="'+escHtml(c.email)+'" placeholder="Email"/>';
+    html+='<div class="edit-btn-row">';
+    html+='<button class="btn-save-contact" onclick="saveContact('+i+')">Save</button>';
+    html+='<button class="btn-cancel-contact" onclick="toggleEdit('+i+')">Cancel</button>';
+    html+='</div></div></div>';
+    return html;
   }).join('');
 }
 
@@ -520,15 +597,12 @@ function generateICS(){
 }
 
 function showCalendarButton(){
-  var existing=document.getElementById('cal-btn');
-  if(existing)return;
-  var btn=document.createElement('button');
-  btn.id='cal-btn';
-  btn.className='btn-optout';
-  btn.style.cssText='width:100%;margin-top:0.5rem;background:rgba(82,183,136,0.12);border:1px solid rgba(82,183,136,0.35);border-radius:7px;padding:0.5rem;color:#52b788;font-family:Inter,sans-serif;font-size:0.82rem;cursor:pointer;';
-  btn.innerHTML='📅 Add to Calendar';
-  btn.onclick=generateICS;
-  document.getElementById('msg').insertAdjacentElement('afterend',btn);
+  var btn=document.getElementById('cal-btn');
+  if(btn){
+    btn.style.background='rgba(82,183,136,0.18)';
+    btn.style.borderColor='rgba(82,183,136,0.5)';
+    btn.style.color='#52b788';
+  }
 }
 function showMsg(t,c){var e=document.getElementById('msg');e.textContent=t;e.style.color=c||'#f5d87a';setTimeout(function(){e.textContent='';},3500);}
 function getName(){return document.getElementById('name-input').value.trim();}
