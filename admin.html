@@ -5,45 +5,242 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Poker Night Admin</title>
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;600&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{min-height:100vh;background-color:#1a472a;background-image:repeating-linear-gradient(0deg,transparent,transparent 40px,rgba(0,0,0,0.08) 40px,rgba(0,0,0,0.08) 41px),repeating-linear-gradient(90deg,transparent,transparent 40px,rgba(0,0,0,0.08) 40px,rgba(0,0,0,0.08) 41px);font-family:Arial,sans-serif;color:#f5f0e8;padding:2rem 1rem 4rem}
-.wrap{max-width:480px;margin:0 auto}
-h1{text-align:center;color:#f5d87a;font-size:2rem;margin-bottom:0.25rem}
-p.sub{text-align:center;color:rgba(245,240,232,0.5);font-size:0.8rem;margin-bottom:1.5rem;text-transform:uppercase;letter-spacing:0.1em}
-.card{background:rgba(0,0,0,0.4);border:1px solid rgba(245,216,122,0.3);border-radius:10px;padding:1.5rem;margin-bottom:1.25rem}
-h2{color:#f5d87a;margin:0 0 1.25rem;font-size:1.1rem}
-label{display:block;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.1em;color:#f5d87a;margin-bottom:0.3rem;margin-top:0.9rem}
-label:first-of-type{margin-top:0}
-input[type="text"],input[type="password"],select,textarea{width:100%;background:rgba(255,255,255,0.1);border:1px solid rgba(245,216,122,0.3);border-radius:6px;padding:0.65rem 0.9rem;color:#f5f0e8;font-size:0.95rem;font-family:Arial,sans-serif}
-input:focus,select:focus,textarea:focus{outline:none;border-color:#f5d87a}
-select option{background:#1a472a;color:#f5f0e8}
-textarea{resize:vertical;min-height:70px}
-.btn-green{width:100%;margin-top:1.25rem;background:#2d6a4f;color:#f5f0e8;border:1px solid #52b788;border-radius:6px;padding:0.75rem;font-size:1rem;font-weight:bold;cursor:pointer}
-.btn-green:hover{opacity:0.85}
-.btn-red{width:100%;margin-top:0.75rem;background:rgba(180,40,40,0.5);color:#f5f0e8;border:1px solid rgba(230,80,80,0.5);border-radius:6px;padding:0.65rem;font-size:0.9rem;font-weight:bold;cursor:pointer}
-.btn-red:hover{opacity:0.85}
-.msg{text-align:center;margin-top:0.75rem;font-size:0.88rem;min-height:1.2em;color:#f5d87a}
-.date-row{display:grid;grid-template-columns:1fr 1fr;gap:0.5rem}
-.winner-row{display:flex;gap:0.5rem}
-.winner-row select,.winner-row input{flex:1}
-#admin-section{display:none}
-.footer-links{text-align:center;margin-top:1rem;font-size:0.78rem}
-.footer-links a{color:rgba(245,216,122,0.5);text-decoration:none}
-.footer-links a:hover{color:#f5d87a}
-.day-label{background:rgba(245,216,122,0.1);border:1px solid rgba(245,216,122,0.2);border-radius:6px;padding:0.5rem 0.9rem;font-size:0.9rem;color:#f5d87a;margin-top:0.35rem;min-height:2rem}
+
+body {
+  min-height: 100vh;
+  font-family: 'Inter', sans-serif;
+  color: #f5f0e8;
+  position: relative;
+  overflow-x: hidden;
+}
+
+.felt-bg {
+  position: fixed;
+  inset: 0;
+  background-color: #1e5c3a;
+  background-image:
+    radial-gradient(ellipse at 30% 20%, #2a7a4f 0%, transparent 60%),
+    radial-gradient(ellipse at 70% 80%, #174d30 0%, transparent 60%);
+  z-index: 0;
+}
+.felt-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Ctext x='10' y='30' font-size='18' fill='rgba(255,255,255,0.04)' font-family='serif'%3E♠%3C/text%3E%3Ctext x='35' y='55' font-size='14' fill='rgba(255,255,255,0.04)' font-family='serif'%3E♣%3C/text%3E%3C/svg%3E");
+  background-size: 60px 60px;
+}
+
+.rail-top, .rail-bottom {
+  position: fixed;
+  left: 0; right: 0;
+  height: 14px;
+  z-index: 1;
+  background: linear-gradient(to bottom, #8B6914, #C8960C, #8B6914);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+}
+.rail-top { top: 0; }
+.rail-bottom { bottom: 0; }
+
+.page-wrap {
+  position: relative;
+  z-index: 2;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 2rem 1rem 4rem;
+}
+
+.suits {
+  text-align: center;
+  font-size: 1.6rem;
+  letter-spacing: 0.6rem;
+  margin-bottom: 0.4rem;
+  filter: drop-shadow(0 1px 3px rgba(0,0,0,0.5));
+}
+.suits .red { color: #e63946; }
+.suits .black { color: #f5f0e8; }
+
+h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: 2.2rem;
+  font-weight: 900;
+  text-align: center;
+  color: #f5d87a;
+  text-shadow: 0 2px 12px rgba(0,0,0,0.6), 0 0 30px rgba(245,216,122,0.2);
+  margin-bottom: 0.2rem;
+  letter-spacing: 1px;
+}
+
+.tagline {
+  text-align: center;
+  font-size: 0.75rem;
+  color: rgba(245,240,232,0.4);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  margin-bottom: 1.75rem;
+}
+
+.card {
+  background: rgba(0,0,0,0.45);
+  border: 1px solid rgba(245,216,122,0.2);
+  border-radius: 10px;
+  padding: 1.4rem 1.5rem;
+  margin-bottom: 1.2rem;
+  backdrop-filter: blur(2px);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05);
+}
+
+.card h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.05rem;
+  color: #f5d87a;
+  margin-bottom: 1.1rem;
+  letter-spacing: 0.5px;
+}
+
+label {
+  display: block;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #f5d87a;
+  font-weight: 600;
+  margin-bottom: 0.3rem;
+  margin-top: 0.9rem;
+}
+label:first-of-type { margin-top: 0; }
+
+input[type="text"],
+input[type="password"],
+input[type="date"],
+select,
+textarea {
+  width: 100%;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(245,216,122,0.28);
+  border-radius: 7px;
+  padding: 0.68rem 0.9rem;
+  color: #f5f0e8;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.93rem;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: #f5d87a;
+  box-shadow: 0 0 0 2px rgba(245,216,122,0.12);
+}
+input::placeholder, textarea::placeholder { color: rgba(245,240,232,0.28); }
+select option { background: #1a3d28; color: #f5f0e8; }
+textarea { resize: vertical; min-height: 65px; }
+
+.btn-green {
+  width: 100%;
+  margin-top: 1.2rem;
+  background: linear-gradient(135deg, #2d6a4f, #3a8a65);
+  color: #f5f0e8;
+  border: 1px solid #52b788;
+  border-radius: 7px;
+  padding: 0.78rem;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.97rem;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.3px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  transition: opacity 0.15s;
+}
+.btn-green:hover { opacity: 0.87; }
+
+.btn-red {
+  width: 100%;
+  margin-top: 0.7rem;
+  background: rgba(160,30,30,0.42);
+  color: #f5f0e8;
+  border: 1px solid rgba(220,70,70,0.5);
+  border-radius: 7px;
+  padding: 0.65rem;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.btn-red:hover { opacity: 0.82; }
+
+.btn-login {
+  width: 100%;
+  margin-top: 0.85rem;
+  background: linear-gradient(135deg, #2d6a4f, #3a8a65);
+  color: #f5f0e8;
+  border: 1px solid #52b788;
+  border-radius: 7px;
+  padding: 0.78rem;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.97rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  transition: opacity 0.15s;
+}
+.btn-login:hover { opacity: 0.87; }
+
+.msg {
+  text-align: center;
+  margin-top: 0.75rem;
+  font-size: 0.86rem;
+  min-height: 1.2em;
+  color: #f5d87a;
+}
+
+.day-label {
+  background: rgba(245,216,122,0.08);
+  border: 1px solid rgba(245,216,122,0.18);
+  border-radius: 7px;
+  padding: 0.5rem 0.9rem;
+  font-size: 0.88rem;
+  color: #f5d87a;
+  margin-top: 0.35rem;
+  min-height: 2rem;
+}
+
+.winner-row { display: flex; gap: 0.5rem; }
+.winner-row select, .winner-row input { flex: 1; }
+
+.footer-links {
+  text-align: center;
+  margin-top: 1rem;
+  font-size: 0.75rem;
+  color: rgba(245,240,232,0.28);
+}
+.footer-links a { color: rgba(245,216,122,0.4); text-decoration: none; }
+.footer-links a:hover { color: #f5d87a; }
+
+#admin-section { display: none; }
 </style>
 </head>
 <body>
-<div class="wrap">
+
+<div class="felt-bg"></div>
+<div class="rail-top"></div>
+<div class="rail-bottom"></div>
+
+<div class="page-wrap">
+
+  <div class="suits">
+    <span class="red">♥</span><span class="black"> ♠ </span><span class="red">♦</span><span class="black"> ♣</span>
+  </div>
   <h1>Poker Night</h1>
-  <p class="sub">Admin Panel</p>
+  <p class="tagline">Admin Panel &mdash; Commissioner Only</p>
 
   <!-- LOGIN -->
   <div id="login-section" class="card">
     <h2>Commissioner Access</h2>
     <label>Password</label>
     <input type="password" id="pw" placeholder="Enter password"/>
-    <button class="btn-green" onclick="login()">Enter</button>
+    <button class="btn-login" onclick="login()">Enter</button>
     <div class="msg" id="login-msg"></div>
   </div>
 
@@ -57,7 +254,7 @@ textarea{resize:vertical;min-height:70px}
       </select>
       <input type="text" id="winner-text" placeholder="Or type name"/>
     </div>
-    <button class="btn-green" onclick="confirmWinner()">Confirm Winner</button>
+    <button class="btn-green" onclick="confirmWinner()">Confirm Winner ♠</button>
     <div class="msg" id="winner-msg"></div>
   </div>
 
@@ -77,7 +274,7 @@ textarea{resize:vertical;min-height:70px}
 
     <div id="custom-date-wrap" style="display:none;margin-top:0.5rem">
       <label>Pick Any Date</label>
-      <input type="date" id="f-date-custom" onchange="customDateChanged()" style="width:100%;background:rgba(255,255,255,0.1);border:1px solid rgba(245,216,122,0.3);border-radius:6px;padding:0.65rem 0.9rem;color:#f5f0e8;font-size:0.95rem"/>
+      <input type="date" id="f-date-custom" onchange="customDateChanged()"/>
       <div class="day-label" id="day-label">Day will appear here</div>
     </div>
 
@@ -99,10 +296,10 @@ textarea{resize:vertical;min-height:70px}
     <label>Grub (last winner brings food)</label>
     <input type="text" id="f-food" placeholder="e.g. Dennis Montero"/>
 
-    <label>Funny Note (optional — shows on RSVP page)</label>
+    <label>Funny Note <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:0.68rem;color:rgba(245,240,232,0.4)">(optional — shows on RSVP page)</span></label>
     <textarea id="f-note" placeholder="e.g. Bring your poker face and leave your excuses at home..."></textarea>
 
-    <button class="btn-green" onclick="saveDetails()">Save Game Details</button>
+    <button class="btn-green" onclick="saveDetails()">♠ Save Game Details</button>
     <button class="btn-red" onclick="clearRsvps()">Clear RSVP List for New Game</button>
     <div class="msg" id="admin-msg"></div>
   </div>
@@ -124,8 +321,9 @@ function login(){
     document.getElementById('winner-section').style.display='block';
     loadLastAttendees();
   }else{
-    document.getElementById('login-msg').textContent='Wrong password. Try again.';
-    document.getElementById('login-msg').style.color='#e07070';
+    var m=document.getElementById('login-msg');
+    m.textContent='Wrong password. Try again.';
+    m.style.color='#e07070';
   }
 }
 document.getElementById('pw').addEventListener('keydown',function(e){if(e.key==='Enter')login();});
@@ -138,9 +336,7 @@ async function loadLastAttendees(){
     var inPlayers=(data.attendees||[]).filter(function(a){return a.status==='in';});
     inPlayers.forEach(function(a){
       var opt=document.createElement('option');
-      opt.value=a.name;
-      opt.textContent=a.name;
-      sel.appendChild(opt);
+      opt.value=a.name;opt.textContent=a.name;sel.appendChild(opt);
     });
   }catch(e){}
 }
@@ -153,9 +349,8 @@ function winnerSelected(){
 function confirmWinner(){
   var name=document.getElementById('winner-text').value.trim()||document.getElementById('winner-select').value;
   if(!name){
-    document.getElementById('winner-msg').textContent='Please select or type a name.';
-    document.getElementById('winner-msg').style.color='#e07070';
-    return;
+    var m=document.getElementById('winner-msg');
+    m.textContent='Please select or type a name.';m.style.color='#e07070';return;
   }
   document.getElementById('f-food').value=name;
   document.getElementById('winner-section').style.display='none';
@@ -168,23 +363,16 @@ async function loadCurrent(winnerOverride){
     var res=await fetch(SCRIPT_URL+'?action=getSettings');
     var data=await res.json();
     var s=data.settings||{};
-    // Set date dropdown
     var sel=document.getElementById('f-date-select');
     var matched=false;
     for(var i=0;i<sel.options.length;i++){
       if(sel.options[i].value===s.date){sel.selectedIndex=i;matched=true;break;}
     }
-    if(!matched&&s.date){
-      sel.value='custom';
-      document.getElementById('custom-date-wrap').style.display='block';
-    }
+    if(!matched&&s.date){sel.value='custom';document.getElementById('custom-date-wrap').style.display='block';}
     document.getElementById('f-host').value=s.host||'';
     document.getElementById('f-address').value=s.address||'';
-    // Set time dropdown
     var tsel=document.getElementById('f-time');
-    for(var j=0;j<tsel.options.length;j++){
-      if(tsel.options[j].value===s.time){tsel.selectedIndex=j;break;}
-    }
+    for(var j=0;j<tsel.options.length;j++){if(tsel.options[j].value===s.time){tsel.selectedIndex=j;break;}}
     document.getElementById('f-food').value=winnerOverride||s.food||'';
     document.getElementById('f-note').value=s.note||'';
   }catch(e){}
@@ -192,11 +380,7 @@ async function loadCurrent(winnerOverride){
 
 function dateSelected(){
   var val=document.getElementById('f-date-select').value;
-  if(val==='custom'){
-    document.getElementById('custom-date-wrap').style.display='block';
-  }else{
-    document.getElementById('custom-date-wrap').style.display='none';
-  }
+  document.getElementById('custom-date-wrap').style.display=val==='custom'?'block':'none';
 }
 
 function customDateChanged(){
@@ -218,8 +402,7 @@ function getSelectedDate(){
 
 function saveDetails(){
   var msg=document.getElementById('admin-msg');
-  msg.style.color='rgba(245,240,232,0.5)';
-  msg.textContent='Saving...';
+  msg.style.color='rgba(245,240,232,0.5)';msg.textContent='Saving...';
   var settings={
     date:getSelectedDate(),
     host:document.getElementById('f-host').value.trim(),
@@ -240,8 +423,7 @@ function saveDetails(){
 function clearRsvps(){
   if(!confirm('Clear the entire RSVP list for the new game?'))return;
   var msg=document.getElementById('admin-msg');
-  msg.style.color='rgba(245,240,232,0.5)';
-  msg.textContent='Clearing...';
+  msg.style.color='rgba(245,240,232,0.5)';msg.textContent='Clearing...';
   fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'clearRsvps'})})
   .then(function(r){return r.json();})
   .then(function(data){
