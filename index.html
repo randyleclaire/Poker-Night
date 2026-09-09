@@ -605,6 +605,12 @@ function showCalendarButton(){
     btn.style.color='#52b788';
   }
 }
+function setButtons(d){
+  var bi=document.getElementById('btn-in');
+  var bo=document.getElementById('btn-out');
+  if(bi)bi.disabled=d;
+  if(bo)bo.disabled=d;
+}
 function showMsg(t,c){var e=document.getElementById('msg');e.textContent=t;e.style.color=c||'#f5d87a';setTimeout(function(){e.textContent='';},3500);}
 function getName(){return document.getElementById('name-input').value.trim();}
 
@@ -705,15 +711,30 @@ function renderList(data){
 
 async function rsvp(status){
   var name=getName();
-  if(!name){showMsg('Select your name first, friend.','#e07070');return;}
-  var note=document.getElementById('rsvp-note').value.trim();
+  if(!name||name==='__other__'){showMsg('Select your name first, friend.','#e07070');return;}
+  var noteEl=document.getElementById('rsvp-note');
+  var note=noteEl?noteEl.value.trim():'';
   setButtons(true);showMsg('Saving...','rgba(245,240,232,0.5)');
   try{
-    var res=await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'rsvp',name:name,status:status,note:note,gameDate:document.getElementById('g-date').textContent})});
+    var res=await fetch(SCRIPT_URL,{
+      method:'POST',
+      body:JSON.stringify({action:'rsvp',name:name,status:status,note:note,gameDate:document.getElementById('g-date').textContent})
+    });
     var data=await res.json();
-    if(data.success){localStorage.setItem('poker-name',name);showMsg(status==='in'?"You're in! Don't be late.":"Noted. Your chips will be missed.");document.getElementById('rsvp-note').value='';if(status==='in'){generateICS();showCalendarButton();}await loadList();}
-    else showMsg('Something went wrong. Try again.','#e07070');
-  }catch(e){showMsg('Could not save. Check your connection.','#e07070');}
+    console.log('RSVP response:',data);
+    if(data.success){
+      localStorage.setItem('poker-name',name);
+      showMsg(status==='in'?"You're in! Don't be late.":"Noted. Your chips will be missed.");
+      if(noteEl)noteEl.value='';
+      if(status==='in'){generateICS();showCalendarButton();}
+      await loadList();
+    }else{
+      showMsg('Server said no. Check the Apps Script deployment.','#e07070');
+    }
+  }catch(e){
+    console.error('RSVP error:',e);
+    showMsg('Could not save: '+e.message,'#e07070');
+  }
   setButtons(false);
 }
 
