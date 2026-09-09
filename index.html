@@ -368,6 +368,7 @@ input:focus {
     <select id="name-input" style="width:100%;background:rgba(255,255,255,0.07);border:1px solid rgba(245,216,122,0.28);border-radius:7px;padding:0.68rem 0.9rem;color:#f5f0e8;font-family:'Inter',sans-serif;font-size:0.93rem;outline:none;margin-bottom:0.75rem;transition:border-color 0.2s;">
       <option value="">-- Select your name --</option>
     </select>
+    <textarea id="rsvp-note" placeholder="Add a note (optional)..." maxlength="120" style="width:100%;background:rgba(255,255,255,0.07);border:1px solid rgba(245,216,122,0.2);border-radius:7px;padding:0.6rem 0.9rem;color:#f5f0e8;font-family:'Inter',sans-serif;font-size:0.85rem;outline:none;resize:none;height:64px;margin-bottom:0.75rem;transition:border-color 0.2s;"></textarea>
     <div class="btn-row">
       <button class="btn btn-in" id="btn-in" onclick="rsvp('in')">♠ I'm In</button>
       <button class="btn btn-out" id="btn-out" onclick="rsvp('out')">✕ Can't Make It</button>
@@ -690,7 +691,8 @@ function renderList(data){
     list.innerHTML='<li class="empty-state">No RSVPs yet — don\'t be the last to fold.</li>';
   }else{
     list.innerHTML=data.attendees.map(function(a){
-      return '<li class="attendee-item"><span class="attendee-name"><span class="status-dot '+(a.status==='in'?'dot-in':'dot-out')+'"></span>'+escHtml(a.name)+'</span><span class="status-badge '+(a.status==='in'?'badge-in':'badge-out')+'">'+(a.status==='in'?'In':'Out')+'</span></li>';
+      var noteHtml=a.note?'<div style="font-size:0.75rem;color:rgba(245,240,232,0.5);margin-top:0.15rem;font-style:italic;">'+escHtml(a.note)+'</div>':'';
+      return '<li class="attendee-item"><span class="attendee-name" style="flex-direction:column;align-items:flex-start;gap:0.05rem;"><span style="display:flex;align-items:center;gap:0.5rem;"><span class="status-dot '+(a.status==='in'?'dot-in':'dot-out')+'"></span>'+escHtml(a.name)+'</span>'+noteHtml+'</span><span class="status-badge '+(a.status==='in'?'badge-in':'badge-out')+'">'+(a.status==='in'?'In':'Out')+'</span></li>';
     }).join('');
   }
   if(data.optedOut&&data.optedOut.length){
@@ -701,12 +703,13 @@ function renderList(data){
 
 async function rsvp(status){
   var name=getName();
-  if(!name){showMsg('Enter your name first, friend.','#e07070');return;}
+  if(!name){showMsg('Select your name first, friend.','#e07070');return;}
+  var note=document.getElementById('rsvp-note').value.trim();
   setButtons(true);showMsg('Saving...','rgba(245,240,232,0.5)');
   try{
-    var res=await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'rsvp',name:name,status:status,gameDate:document.getElementById('g-date').textContent})});
+    var res=await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'rsvp',name:name,status:status,note:note,gameDate:document.getElementById('g-date').textContent})});
     var data=await res.json();
-    if(data.success){localStorage.setItem('poker-name',name);showMsg(status==='in'?"You're in! Don't be late.":"Noted. Your chips will be missed.");if(status==='in'){generateICS();showCalendarButton();}await loadList();}
+    if(data.success){localStorage.setItem('poker-name',name);showMsg(status==='in'?"You're in! Don't be late.":"Noted. Your chips will be missed.");document.getElementById('rsvp-note').value='';if(status==='in'){generateICS();showCalendarButton();}await loadList();}
     else showMsg('Something went wrong. Try again.','#e07070');
   }catch(e){showMsg('Could not save. Check your connection.','#e07070');}
   setButtons(false);
