@@ -298,6 +298,12 @@ textarea { resize: vertical; min-height: 65px; }
     <div class="msg" id="admin-msg"></div>
   </div>
 
+  <!-- Visitor Log -->
+  <div class="card" id="visitors-section" style="display:none">
+    <h2>Site Visitors <span id="visitor-count" style="font-family:Inter,sans-serif;font-size:0.75rem;background:rgba(245,216,122,0.13);color:#f5d87a;padding:0.1rem 0.5rem;border-radius:20px;font-weight:600;margin-left:0.4rem;"></span></h2>
+    <div id="visitor-list" style="max-height:280px;overflow-y:auto;margin-top:0.5rem;"></div>
+  </div>
+
   <!-- Send Text -->
   <div class="card" style="text-align:center;">
     <h2 style="margin-bottom:0.6rem;">Send Game Info</h2>
@@ -321,6 +327,7 @@ function login(){
     document.getElementById('login-section').style.display='none';
     document.getElementById('winner-section').style.display='block';
     loadLastAttendees();
+    loadVisitors();
   }else{
     var m=document.getElementById('login-msg');
     m.textContent='Wrong password. Try again.';
@@ -489,6 +496,35 @@ function sendText(){
   var link='https://randyleclaire.github.io/Poker-Night';
   var msg='🃏 Poker Night!\n📅 '+(date||'TBD')+'\n📍 '+where+'\n⏰ '+time+'\n🍽 Grub: '+food+' (last winner, winner, something for dinner!)\n\nRSVP here: '+link;
   window.open('sms:?&body='+encodeURIComponent(msg));
+}
+
+function loadVisitors(){
+  fetch(SCRIPT_URL+'?action=getVisits').then(function(r){return r.json();}).then(function(data){
+    if(!data.visits||!data.visits.length)return;
+    document.getElementById('visitors-section').style.display='block';
+    document.getElementById('visitor-count').textContent=data.total+' total';
+    var list=document.getElementById('visitor-list');
+    // Group by date
+    var byDate={};
+    data.visits.forEach(function(v){
+      var d=new Date(v.time);
+      var dateKey=isNaN(d)?'Unknown':d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+      var timeStr=isNaN(d)?'':d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+      if(!byDate[dateKey])byDate[dateKey]=[];
+      byDate[dateKey].push({time:timeStr,device:v.device||'Unknown'});
+    });
+    var html='';
+    Object.keys(byDate).forEach(function(date){
+      html+='<div style="padding:0.35rem 0.75rem;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.12em;color:rgba(245,216,122,0.5);font-weight:700;background:rgba(0,0,0,0.2);">'+date+'</div>';
+      byDate[date].forEach(function(v){
+        html+='<div style="display:flex;justify-content:space-between;padding:0.45rem 0.9rem;border-bottom:1px solid rgba(245,240,232,0.06);font-size:0.83rem;">'
+          +'<span style="color:#f5f0e8;">'+v.time+'</span>'
+          +'<span style="color:rgba(245,240,232,0.45);font-size:0.75rem;">'+v.device+'</span>'
+          +'</div>';
+      });
+    });
+    list.innerHTML=html;
+  }).catch(function(){});
 }
 
 function clearRsvps(){
