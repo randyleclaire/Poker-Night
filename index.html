@@ -611,7 +611,6 @@ function getName(){return document.getElementById('name-input').value.trim();}
 function populateNameDropdown(){
   var sel=document.getElementById('name-input');
   var saved=localStorage.getItem('poker-name')||'';
-  // Clear all but first placeholder option
   while(sel.options.length>1)sel.remove(1);
   contacts.slice().sort(function(a,b){return a.name.localeCompare(b.name);}).forEach(function(c){
     var opt=document.createElement('option');
@@ -619,23 +618,26 @@ function populateNameDropdown(){
     if(c.name===saved)opt.selected=true;
     sel.appendChild(opt);
   });
-  // Add "Someone else" free-type fallback at bottom
   var other=document.createElement('option');
   other.value='__other__';other.textContent='Someone else...';
   sel.appendChild(other);
-  sel.addEventListener('change',function(){
-    if(sel.value==='__other__'){
-      var custom=prompt('Enter your name:');
-      if(custom&&custom.trim()){
-        // Add to list temporarily and select
-        var newOpt=document.createElement('option');
-        newOpt.value=custom.trim();newOpt.textContent=custom.trim();
-        sel.insertBefore(newOpt,other);
-        sel.value=custom.trim();
-      }else{sel.value='';}
-    }
-  });
 }
+
+// Handle "Someone else" selection — attached once at page load
+document.getElementById('name-input').addEventListener('change',function(){
+  if(this.value==='__other__'){
+    var custom=prompt('Enter your name:');
+    if(custom&&custom.trim()){
+      var newOpt=document.createElement('option');
+      newOpt.value=custom.trim();newOpt.textContent=custom.trim();
+      var sel=document.getElementById('name-input');
+      sel.insertBefore(newOpt,sel.options[sel.options.length-1]);
+      sel.value=custom.trim();
+    }else{
+      this.value='';
+    }
+  }
+});
 
 async function loadSettings(){
   try{
@@ -728,6 +730,19 @@ async function optOut(){
 }
 
 loadSettings();loadList();renderContacts();populateNameDropdown();
+
+// Log visit
+(function(){
+  try{
+    var visited=JSON.parse(localStorage.getItem('poker-visited')||'[]');
+    var now=new Date().toISOString();
+    var device=navigator.userAgent.includes('iPhone')||navigator.userAgent.includes('Android')?'Mobile':'Desktop';
+    visited.push({time:now,device:device});
+    if(visited.length>50)visited=visited.slice(-50);
+    localStorage.setItem('poker-visited',JSON.stringify(visited));
+    fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'logVisit',device:device,time:now})}).catch(function(){});
+  }catch(e){}
+})();
 setInterval(loadList,30000);
 </script>
 </body>
