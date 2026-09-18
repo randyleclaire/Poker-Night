@@ -206,6 +206,11 @@ textarea { resize: vertical; min-height: 65px; }
   min-height: 2rem;
 }
 
+.collapse-h { display:flex; align-items:center; justify-content:space-between; cursor:pointer; user-select:none; }
+.collapse-h:hover .chev { color:#f5d87a; }
+.chev { color:rgba(245,216,122,0.45); font-size:0.8rem; transition:transform 0.2s,color 0.2s; flex-shrink:0; margin-left:0.5rem; }
+.chev.closed { transform:rotate(-90deg); }
+.collapse-body.closed { display:none; }
 .winner-row { display: flex; gap: 0.5rem; }
 .winner-row select, .winner-row input { flex: 1; }
 
@@ -300,7 +305,8 @@ textarea { resize: vertical; min-height: 65px; }
 
   <!-- Schedule Editor -->
   <div class="card" id="schedule-section" style="display:none">
-    <h2>Upcoming Game Dates</h2>
+    <h2 class="collapse-h" onclick="toggleCard('sched')"><span>Upcoming Game Dates</span><span class="chev" id="chev-sched">&#9660;</span></h2>
+    <div class="collapse-body" id="body-sched">
     <p style="font-size:0.8rem;color:rgba(245,240,232,0.5);margin-bottom:0.9rem;">Plan several months ahead. These show on the RSVP page and fill the date picker above.</p>
     <div id="sched-list" style="margin-bottom:0.75rem;"></div>
     <input type="date" id="sched-new" style="margin-bottom:0.5rem;"/>
@@ -309,18 +315,32 @@ textarea { resize: vertical; min-height: 65px; }
     <button class="btn-green" style="margin-top:0.5rem;background:linear-gradient(135deg,#8B6914,#C8960C);border-color:#f5d87a;" onclick="autoFillMonths()">Auto-Fill Next 6 Months (2nd Wednesday)</button>
     <button class="btn-green" style="margin-top:0.5rem;" onclick="saveSchedule()">Save Schedule</button>
     <div class="msg" id="sched-msg"></div>
+    </div>
   </div>
 
   <!-- Visitor Log -->
   <div class="card" id="visitors-section" style="display:none">
-    <h2>Site Visitors <span id="visitor-count" style="font-family:Inter,sans-serif;font-size:0.75rem;background:rgba(245,216,122,0.13);color:#f5d87a;padding:0.1rem 0.5rem;border-radius:20px;font-weight:600;margin-left:0.4rem;"></span></h2>
-    <div id="visitor-list" style="max-height:280px;overflow-y:auto;margin-top:0.5rem;"></div>
+    <h2 class="collapse-h" onclick="toggleCard('vis')"><span>Site Visitors <span id="visitor-count" style="font-family:Inter,sans-serif;font-size:0.75rem;background:rgba(245,216,122,0.13);color:#f5d87a;padding:0.1rem 0.5rem;border-radius:20px;font-weight:600;margin-left:0.4rem;"></span></span><span class="chev" id="chev-vis">&#9660;</span></h2>
+    <div class="collapse-body" id="body-vis"><div id="visitor-list" style="max-height:280px;overflow-y:auto;margin-top:0.5rem;"></div></div>
   </div>
 
   <!-- Send Text -->
-  <div class="card" style="text-align:center;">
+  <div class="card">
     <h2 style="margin-bottom:0.6rem;">Send Game Info</h2>
-    <p style="font-size:0.82rem;color:rgba(245,240,232,0.55);margin-bottom:1rem;">Opens your SMS app pre-filled with the game details and RSVP link.</p>
+    <p style="font-size:0.82rem;color:rgba(245,240,232,0.55);margin-bottom:0.9rem;">Uncheck anyone you don't want to text.</p>
+    <div class="collapse-h" onclick="toggleCard('rcp')" style="margin-bottom:0.5rem;font-size:0.75rem;">
+      <span style="color:#f5d87a;font-weight:600;" id="recipient-count">0 selected</span>
+      <span class="chev" id="chev-rcp">&#9660;</span>
+    </div>
+    <div class="collapse-body" id="body-rcp">
+    <div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:0.5rem;font-size:0.75rem;">
+      <span>
+        <button onclick="selectAllRecipients(true)" style="background:transparent;border:1px solid rgba(82,183,136,0.35);color:#52b788;border-radius:5px;padding:0.2rem 0.55rem;font-size:0.7rem;cursor:pointer;margin-right:0.3rem;">All</button>
+        <button onclick="selectAllRecipients(false)" style="background:transparent;border:1px solid rgba(245,240,232,0.15);color:rgba(245,240,232,0.45);border-radius:5px;padding:0.2rem 0.55rem;font-size:0.7rem;cursor:pointer;">None</button>
+      </span>
+    </div>
+    <div id="recipient-list" style="max-height:260px;overflow-y:auto;border:1px solid rgba(245,216,122,0.18);border-radius:8px;margin-bottom:0.9rem;"></div>
+    </div>
     <button onclick="sendText()" style="width:100%;background:linear-gradient(135deg,#2d6a4f,#3a8a65);color:#f5f0e8;border:1px solid #52b788;border-radius:7px;padding:0.78rem;font-family:Inter,sans-serif;font-size:0.97rem;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.3);">📱 Send Text to Group</button>
   </div>
 
@@ -343,6 +363,8 @@ function login(){
     loadVisitors();
     document.getElementById('schedule-section').style.display='block';
     loadSchedule();
+    loadOptedOut();
+    applyCollapsed();
   }else{
     var m=document.getElementById('login-msg');
     m.textContent='Wrong password. Try again.';
@@ -506,7 +528,95 @@ function saveDetails(){
   .catch(function(){msg.style.color='#e07070';msg.textContent='Could not connect. Check your internet.';});
 }
 
+var ADMIN_CONTACTS=[
+  {name:'Dennis Brown',mobile:'(408) 307-8963'},
+  {name:'Kyle Brown',mobile:'(408) 747-7945'},
+  {name:'Seth Brown',mobile:'(408) 612-6853'},
+  {name:'Greg Davis',mobile:'(408) 355-4844'},
+  {name:'Sean Davis',mobile:'(408) 728-0825'},
+  {name:'Eddie Estavillo',mobile:'(408) 656-7805'},
+  {name:'Pete Farrell',mobile:'(408) 472-0953'},
+  {name:'Grant LeClaire',mobile:'(925) 548-5412'},
+  {name:'Randy LeClaire',mobile:'(408) 406-7763'},
+  {name:'Billy Miller',mobile:'(408) 464-5890'},
+  {name:'Dennis Montero',mobile:'(408) 590-7170'},
+  {name:'Mark Nagel',mobile:'(408) 390-3920'},
+  {name:'Fernando Vasquez',mobile:'(408) 823-6995'},
+  {name:'Bill Yeager',mobile:'(408) 422-1827'}
+].sort(function(x,y){return x.name.localeCompare(y.name);});
+
+var adminOptedOut=[];
+var textList=JSON.parse(localStorage.getItem('poker-textlist')||'null');
+if(textList===null){textList=ADMIN_CONTACTS.map(function(c){return c.name;});}
+function toggleCard(k){
+  var b=document.getElementById('body-'+k), c=document.getElementById('chev-'+k);
+  if(!b)return;
+  var closed=b.classList.toggle('closed');
+  if(c)c.classList.toggle('closed',closed);
+  var st=JSON.parse(localStorage.getItem('poker-admin-collapsed')||'{}');
+  st[k]=closed; localStorage.setItem('poker-admin-collapsed',JSON.stringify(st));
+}
+function applyCollapsed(){
+  var st=JSON.parse(localStorage.getItem('poker-admin-collapsed')||'{"vis":true,"rcp":true}');
+  Object.keys(st).forEach(function(k){
+    var b=document.getElementById('body-'+k), c=document.getElementById('chev-'+k);
+    if(b&&st[k]){b.classList.add('closed'); if(c)c.classList.add('closed');}
+  });
+}
+function saveTextList(){localStorage.setItem('poker-textlist',JSON.stringify(textList));}
+
+function renderRecipients(){
+  var list=document.getElementById('recipient-list');
+  if(!list)return;
+  var html='';
+  ADMIN_CONTACTS.forEach(function(c){
+    var isOut=adminOptedOut.indexOf(c.name)>=0;
+    var checked=(!isOut&&textList.indexOf(c.name)>=0)?'checked':'';
+    html+='<label style="display:flex;align-items:center;gap:0.6rem;padding:0.55rem 0.9rem;border-bottom:1px solid rgba(245,240,232,0.06);cursor:'+(isOut?'not-allowed':'pointer')+';'+(isOut?'opacity:0.35;':'')+'">'
+      +'<input type="checkbox" data-name="'+c.name+'" '+checked+(isOut?' disabled':'')+' onchange="toggleRecipient(this)" style="width:17px;height:17px;accent-color:#52b788;flex-shrink:0;"/>'
+      +'<span style="flex:1;font-size:0.88rem;color:#f5f0e8;'+(isOut?'text-decoration:line-through;':'')+'">'+c.name+'</span>'
+      +'<span style="font-size:0.72rem;color:rgba(245,240,232,0.35);">'+(isOut?'opted out':c.mobile)+'</span>'
+      +'</label>';
+  });
+  list.innerHTML=html;
+  updateRecipientCount();
+}
+
+function toggleRecipient(cb){
+  var n=cb.getAttribute('data-name');
+  var i=textList.indexOf(n);
+  if(cb.checked){if(i<0)textList.push(n);}
+  else if(i>=0)textList.splice(i,1);
+  saveTextList();
+  updateRecipientCount();
+}
+
+function updateRecipientCount(){
+  var el=document.getElementById('recipient-count');
+  if(!el)return;
+  var n=textList.filter(function(x){return adminOptedOut.indexOf(x)<0;}).length;
+  el.textContent=n+' selected';
+}
+
+function selectAllRecipients(on){
+  textList=on?ADMIN_CONTACTS.filter(function(c){return adminOptedOut.indexOf(c.name)<0;}).map(function(c){return c.name;}):[];
+  saveTextList();
+  renderRecipients();
+}
+
+function loadOptedOut(){
+  fetch(SCRIPT_URL+'?action=getAll').then(function(r){return r.json();}).then(function(d){
+    adminOptedOut=d.optedOut||[];
+    renderRecipients();
+  }).catch(function(){renderRecipients();});
+}
+
 function sendText(){
+  var picked=ADMIN_CONTACTS.filter(function(c){
+    return textList.indexOf(c.name)>=0 && adminOptedOut.indexOf(c.name)<0 && c.mobile;
+  });
+  if(!picked.length){alert('No one is selected.');return;}
+  var nums=picked.map(function(c){return c.mobile.replace(/[^0-9+]/g,'');}).join(',');
   var date=document.getElementById('f-date-select').value==='custom'
     ?document.getElementById('day-label').textContent
     :document.getElementById('f-date-select').value;
@@ -517,146 +627,9 @@ function sendText(){
   var where=host&&addr?host+' — '+addr:host||addr||'TBD';
   var link='https://randyleclaire.github.io/Poker-Night';
   var msg='🃏 Poker Night!\n📅 '+(date||'TBD')+'\n📍 '+where+'\n⏰ '+time+'\n🍽 Grub: '+food+' (last winner, winner, something for dinner!)\n\nRSVP here: '+link;
-  window.open('sms:?&body='+encodeURIComponent(msg));
-}
-
-function loadVisitors(){
-  fetch(SCRIPT_URL+'?action=getVisits').then(function(r){return r.json();}).then(function(data){
-    if(!data.visits||!data.visits.length)return;
-    document.getElementById('visitors-section').style.display='block';
-    document.getElementById('visitor-count').textContent=data.total+' total';
-    var list=document.getElementById('visitor-list');
-    // Group by date
-    var byDate={};
-    data.visits.forEach(function(v){
-      var d=new Date(v.time);
-      var dateKey=isNaN(d)?'Unknown':d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
-      var timeStr=isNaN(d)?'':d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
-      if(!byDate[dateKey])byDate[dateKey]=[];
-      byDate[dateKey].push({time:timeStr,device:v.device||'Unknown'});
-    });
-    var html='';
-    Object.keys(byDate).forEach(function(date){
-      html+='<div style="padding:0.35rem 0.75rem;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.12em;color:rgba(245,216,122,0.5);font-weight:700;background:rgba(0,0,0,0.2);">'+date+'</div>';
-      byDate[date].forEach(function(v){
-        html+='<div style="display:flex;justify-content:space-between;padding:0.45rem 0.9rem;border-bottom:1px solid rgba(245,240,232,0.06);font-size:0.83rem;">'
-          +'<span style="color:#f5f0e8;">'+v.time+'</span>'
-          +'<span style="color:rgba(245,240,232,0.45);font-size:0.75rem;">'+v.device+'</span>'
-          +'</div>';
-      });
-    });
-    list.innerHTML=html;
-  }).catch(function(){});
-}
-
-var schedule=[];
-var DAYNAMES=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-var MONTHNAMES=['January','February','March','April','May','June','July','August','September','October','November','December'];
-
-function fmtDate(d){
-  return DAYNAMES[d.getDay()]+', '+MONTHNAMES[d.getMonth()]+' '+d.getDate()+', '+d.getFullYear();
-}
-
-function loadSchedule(){
-  fetch(SCRIPT_URL+'?action=getSchedule').then(function(r){return r.json();}).then(function(d){
-    schedule=d.schedule||[];
-    renderSchedule();
-    syncDateDropdown();
-  }).catch(function(){});
-}
-
-function renderSchedule(){
-  var list=document.getElementById('sched-list');
-  if(!schedule.length){
-    list.innerHTML='<div style="color:rgba(245,240,232,0.35);font-size:0.85rem;font-style:italic;padding:0.5rem 0;">No dates scheduled yet.</div>';
-    return;
-  }
-  var html='';
-  schedule.forEach(function(dt,i){
-    html+='<div style="display:flex;align-items:center;justify-content:space-between;padding:0.5rem 0.2rem;border-bottom:1px solid rgba(245,240,232,0.07);">'
-      +'<span style="font-size:0.9rem;color:rgba(245,240,232,0.85);">'+dt+'</span>'
-      +'<button onclick="removeScheduleDate('+i+')" style="background:transparent;border:1px solid rgba(220,70,70,0.4);color:#e07070;border-radius:5px;padding:0.15rem 0.5rem;font-size:0.7rem;cursor:pointer;">Remove</button>'
-      +'</div>';
-  });
-  list.innerHTML=html;
-}
-
-function addScheduleDate(){
-  var v=document.getElementById('sched-new').value;
-  if(!v){document.getElementById('sched-msg').textContent='Pick a date first.';return;}
-  var d=new Date(v+'T12:00:00');
-  if(isNaN(d))return;
-  var s=fmtDate(d);
-  if(schedule.indexOf(s)>=0){document.getElementById('sched-msg').textContent='That date is already on the list.';return;}
-  schedule.push(s);
-  sortSchedule();
-  renderSchedule();
-  syncDateDropdown();
-  document.getElementById('sched-new').value='';
-  document.getElementById('sched-day-label').textContent='Pick a date to add';
-  document.getElementById('sched-msg').textContent='';
-}
-
-function removeScheduleDate(i){
-  schedule.splice(i,1);
-  renderSchedule();
-  syncDateDropdown();
-}
-
-function sortSchedule(){
-  schedule.sort(function(a,b){
-    var da=new Date(a.replace(/^[A-Za-z]+,\s*/,''));
-    var db=new Date(b.replace(/^[A-Za-z]+,\s*/,''));
-    return da-db;
-  });
-}
-
-function autoFillMonths(){
-  var now=new Date();
-  var added=0;
-  for(var m=0;m<6;m++){
-    var target=new Date(now.getFullYear(),now.getMonth()+m,1);
-    // find 2nd Wednesday
-    var count=0,day=1,found=null;
-    while(day<=31){
-      var t=new Date(target.getFullYear(),target.getMonth(),day);
-      if(t.getMonth()!==target.getMonth())break;
-      if(t.getDay()===3){count++;if(count===2){found=t;break;}}
-      day++;
-    }
-    if(found&&found>now){
-      var s=fmtDate(found);
-      if(schedule.indexOf(s)<0){schedule.push(s);added++;}
-    }
-  }
-  sortSchedule();
-  renderSchedule();
-  syncDateDropdown();
-  document.getElementById('sched-msg').style.color='#52b788';
-  document.getElementById('sched-msg').textContent='Added '+added+' date'+(added===1?'':'s')+'. Remember to Save.';
-}
-
-function saveSchedule(){
-  var m=document.getElementById('sched-msg');
-  m.style.color='rgba(245,240,232,0.5)';m.textContent='Saving...';
-  fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'saveSchedule',schedule:schedule})})
-  .then(function(r){return r.json();})
-  .then(function(d){
-    if(d.success){m.style.color='#52b788';m.textContent='Schedule saved.';}
-    else{m.style.color='#e07070';m.textContent='Save failed.';}
-  }).catch(function(){m.style.color='#e07070';m.textContent='Could not connect.';});
-}
-
-function syncDateDropdown(){
-  var sel=document.getElementById('f-date-select');
-  var cur=sel.value;
-  while(sel.options.length>1)sel.remove(1);
-  schedule.forEach(function(dt){
-    var o=document.createElement('option');o.value=dt;o.textContent=dt;sel.appendChild(o);
-  });
-  var c=document.createElement('option');c.value='custom';c.textContent='Pick a different date...';
-  sel.appendChild(c);
-  if(cur)sel.value=cur;
+  var isIOS=/iPhone|iPad|iPod/i.test(navigator.userAgent);
+  var url=isIOS?('sms:'+nums+'&body='+encodeURIComponent(msg)):('sms:'+nums+'?body='+encodeURIComponent(msg));
+  window.open(url);
 }
 
 function clearRsvps(){
