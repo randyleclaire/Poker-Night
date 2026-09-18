@@ -397,6 +397,12 @@ input:focus {
     <button class="btn-add-contact" onclick="addContact()">+ Add New Player</button>
   </div>
 
+  <!-- Upcoming Dates -->
+  <div class="card" id="schedule-card" style="display:none;">
+    <h2>Upcoming Games</h2>
+    <div id="schedule-list"></div>
+  </div>
+
   <!-- Send Text -->
   <div class="card" style="text-align:center;">
     <h2 style="margin-bottom:0.6rem;">Send Game Info</h2>
@@ -645,48 +651,77 @@ document.getElementById('name-input').addEventListener('change',function(){
   }
 });
 
-async function loadSettings(){
-  try{
-    var res=await fetch(SCRIPT_URL+'?action=getSettings');
-    var data=await res.json();
-    var s=data.settings||{};
-    // Format date — handle ISO timestamps from Google Sheets OR plain text
-    var dateStr=s.date||'TBD';
-    var days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-    var months=['January','February','March','April','May','June','July','August','September','October','November','December'];
-    if(dateStr!=='TBD'){
-      var startsWithDay=days.some(function(d){return dateStr.startsWith(d);});
-      if(!startsWithDay){
-        // Try parsing — works for ISO strings and plain dates
-        var parsed=new Date(dateStr);
-        if(!isNaN(parsed)){
-          // Use UTC values to avoid timezone shifting the date
-          var d=new Date(parsed.getUTCFullYear(),parsed.getUTCMonth(),parsed.getUTCDate());
-          dateStr=days[d.getDay()]+', '+months[d.getMonth()]+' '+d.getDate()+', '+d.getFullYear();
-        }
+function applyData(d){
+  var s=d.settings||{};
+  var days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  var months=['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+  var dateStr=s.date||'TBD';
+  if(dateStr!=='TBD'){
+    var hasDay=days.some(function(x){return dateStr.indexOf(x)===0;});
+    if(!hasDay){
+      var p=new Date(dateStr);
+      if(!isNaN(p)){
+        var dd=new Date(p.getUTCFullYear(),p.getUTCMonth(),p.getUTCDate());
+        dateStr=days[dd.getDay()]+', '+months[dd.getMonth()]+' '+dd.getDate()+', '+dd.getFullYear();
       }
     }
-    document.getElementById('g-date').textContent=dateStr;
-    // Where: show host and address separately if both present
-    var hostStr='';
-    if(s.host&&s.address)hostStr=s.host+' — '+s.address;
-    else if(s.host)hostStr=s.host;
-    else if(s.address)hostStr=s.address;
-    else hostStr='TBD';
-    document.getElementById('g-host').textContent=hostStr;
-    document.getElementById('g-time').textContent=s.time||'6:00 PM – 11:00 PM';
-    document.getElementById('g-food').textContent=s.food?s.food+' (last winner, winner, something for dinner!)':'TBD';
-    if(s.note){var nb=document.getElementById('note-banner');nb.textContent=s.note;nb.style.display='block';}
+  }
+  document.getElementById('g-date').textContent=dateStr;
+
+  var w='TBD';
+  if(s.host&&s.address)w=s.host+' — '+s.address;
+  else if(s.host)w=s.host;
+  else if(s.address)w=s.address;
+  document.getElementById('g-host').textContent=w;
+
+  document.getElementById('g-time').textContent=s.time||'6:00 PM – 11:00 PM';
+  document.getElementById('g-food').textContent=s.food?s.food+' (last winner, winner, something for dinner!)':'TBD';
+
+  var nb=document.getElementById('note-banner');
+  if(s.note){nb.textContent=s.note;nb.style.display='block';}else{nb.style.display='none';}
+
+  renderList(d);
+  renderSchedule(d.schedule||[]);
+}
+
+function renderSchedule(sched){
+  var card=document.getElementById('schedule-card');
+  var list=document.getElementById('schedule-list');
+  if(!sched.length){card.style.display='none';return;}
+  card.style.display='block';
+  var current=document.getElementById('g-date').textContent;
+  var html='';
+  sched.forEach(function(dt){
+    var isNext=dt===current;
+    html+='<div style="display:flex;align-items:center;justify-content:space-between;padding:0.5rem 0;border-bottom:1px solid rgba(245,240,232,0.07);font-size:0.9rem;">'
+      +'<span style="color:'+(isNext?'#f5d87a':'rgba(245,240,232,0.8)')+';font-weight:'+(isNext?'600':'400')+';">'+escHtml(dt)+'</span>'
+      +(isNext?'<span style="font-size:0.65rem;background:rgba(245,216,122,0.15);color:#f5d87a;padding:0.12rem 0.5rem;border-radius:20px;font-weight:600;">NEXT</span>':'')
+      +'</div>';
+  });
+  list.innerHTML=html;
+}
+
+// Single combined load — renders cache instantly, then refreshes
+async function loadAll(){
+  try{
+    var res=await fetch(SCRIPT_URL+'?action=getEverything');
+    var d=await res.json();
+    localStorage.setItem('poker-cache',JSON.stringify(d));
+    applyData(d);
+  }catch(e){console.error('Load failed:',e);}
+}
+
+function loadCached(){
+  try{
+    var c=localStorage.getItem('poker-cache');
+    if(c)applyData(JSON.parse(c));
   }catch(e){}
 }
 
-async function loadList(){
-  try{
-    var res=await fetch(SCRIPT_URL+'?action=getAll');
-    var data=await res.json();
-    renderList(data);
-  }catch(e){document.getElementById('attendee-list').innerHTML='<li class="empty-state">Could not load RSVPs.</li>';}
-}
+// Backwards-compatible aliases
+function loadSettings(){return loadAll();}
+function loadList(){return loadAll();}
 
 function renderList(data){
   var list=document.getElementById('attendee-list');
@@ -750,7 +785,7 @@ async function optOut(){
   setButtons(false);
 }
 
-loadSettings();loadList();renderContacts();populateNameDropdown();
+loadCached();renderContacts();populateNameDropdown();loadAll();
 
 // Log visit
 (function(){
@@ -764,7 +799,8 @@ loadSettings();loadList();renderContacts();populateNameDropdown();
     fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'logVisit',device:device,time:now})}).catch(function(){});
   }catch(e){}
 })();
-setInterval(loadList,30000);
+setInterval(function(){if(!document.hidden)loadAll();},60000);
+document.addEventListener('visibilitychange',function(){if(!document.hidden)loadAll();});
 </script>
 </body>
 </html>
