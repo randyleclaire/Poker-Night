@@ -260,6 +260,24 @@ input:focus {
 .opted-out-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.12em; color: rgba(245,240,232,0.3); margin-bottom: 0.4rem; }
 .opted-out-item { font-size: 0.8rem; color: rgba(245,240,232,0.3); padding: 0.2rem 0; text-decoration: line-through; }
 
+.collapse-h {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+}
+.collapse-h:hover .chev { color: #f5d87a; }
+.chev {
+  color: rgba(245,216,122,0.45);
+  font-size: 0.8rem;
+  transition: transform 0.2s, color 0.2s;
+  flex-shrink: 0;
+  margin-left: 0.5rem;
+}
+.chev.closed { transform: rotate(-90deg); }
+.collapse-body { overflow: hidden; }
+.collapse-body.closed { display: none; }
 .count-badge {
   display: inline-block;
   background: rgba(245,216,122,0.13);
@@ -380,7 +398,8 @@ input:focus {
   </div>
 
   <div class="card">
-    <h2>Who's Coming <span class="count-badge" id="count-badge">...</span></h2>
+    <h2 class="collapse-h" onclick="toggleCard('who')"><span>Who's Coming <span class="count-badge" id="count-badge">...</span></span><span class="chev" id="chev-who">&#9660;</span></h2>
+    <div class="collapse-body" id="body-who">
     <ul class="attendee-list" id="attendee-list">
       <li class="empty-state">Loading the table...</li>
     </ul>
@@ -388,25 +407,34 @@ input:focus {
       <div class="opted-out-label">Opted out of texts</div>
       <div id="opted-out-list"></div>
     </div>
+    </div>
   </div>
 
   <div class="card">
-    <h2>The Poker Group</h2>
+    <h2 class="collapse-h" onclick="toggleCard('grp')"><span>The Poker Group <span class="count-badge" id="recipient-count">0 selected</span></span><span class="chev" id="chev-grp">&#9660;</span></h2>
+    <div class="collapse-body" id="body-grp">
+    <div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:0.6rem;font-size:0.75rem;">
+      <span>
+        <button onclick="selectAllRecipients(true)" style="background:transparent;border:1px solid rgba(82,183,136,0.35);color:#52b788;border-radius:5px;padding:0.2rem 0.55rem;font-size:0.7rem;cursor:pointer;margin-right:0.3rem;">All</button>
+        <button onclick="selectAllRecipients(false)" style="background:transparent;border:1px solid rgba(245,240,232,0.15);color:rgba(245,240,232,0.45);border-radius:5px;padding:0.2rem 0.55rem;font-size:0.7rem;cursor:pointer;">None</button>
+      </span>
+    </div>
     <input class="contact-search" type="text" id="contact-search" placeholder="Search by name..." oninput="renderContacts()"/>
     <div id="contacts-list"></div>
     <button class="btn-add-contact" onclick="addContact()">+ Add New Player</button>
+    </div>
   </div>
 
   <!-- Upcoming Dates -->
   <div class="card" id="schedule-card" style="display:none;">
-    <h2>Upcoming Games</h2>
-    <div id="schedule-list"></div>
+    <h2 class="collapse-h" onclick="toggleCard('sched')"><span>Upcoming Games</span><span class="chev" id="chev-sched">&#9660;</span></h2>
+    <div class="collapse-body" id="body-sched"><div id="schedule-list"></div></div>
   </div>
 
   <!-- Send Text -->
   <div class="card" style="text-align:center;">
     <h2 style="margin-bottom:0.6rem;">Send Game Info</h2>
-    <p style="font-size:0.82rem;color:rgba(245,240,232,0.55);margin-bottom:1rem;">Opens your SMS app pre-filled with the game details and RSVP link.</p>
+    <p style="font-size:0.82rem;color:rgba(245,240,232,0.55);margin-bottom:1rem;">Opens your SMS app pre-filled with the game details and RSVP link.<br/>Uncheck anyone in the Poker Group list below to leave them off.</p>
     <button onclick="sendText()" style="width:100%;background:linear-gradient(135deg,#2d6a4f,#3a8a65);color:#f5f0e8;border:1px solid #52b788;border-radius:7px;padding:0.78rem;font-family:Inter,sans-serif;font-size:0.97rem;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.3);">📱 Send Text to Group</button>
   </div>
 
@@ -454,18 +482,60 @@ var DEFAULT_CONTACTS=[
 
 var contacts=JSON.parse(localStorage.getItem('poker-contacts')||'null')||DEFAULT_CONTACTS;
 var optedOutNames=JSON.parse(localStorage.getItem('poker-optedout')||'[]');
+var textList=JSON.parse(localStorage.getItem('poker-textlist')||'null');
+function toggleCard(k){
+  var b=document.getElementById('body-'+k), c=document.getElementById('chev-'+k);
+  if(!b)return;
+  var closed=b.classList.toggle('closed');
+  if(c)c.classList.toggle('closed',closed);
+  var st=JSON.parse(localStorage.getItem('poker-collapsed')||'{}');
+  st[k]=closed; localStorage.setItem('poker-collapsed',JSON.stringify(st));
+}
+function applyCollapsed(){
+  var st=JSON.parse(localStorage.getItem('poker-collapsed')||'{"grp":true}');
+  Object.keys(st).forEach(function(k){
+    var b=document.getElementById('body-'+k), c=document.getElementById('chev-'+k);
+    if(b&&st[k]){b.classList.add('closed'); if(c)c.classList.add('closed');}
+  });
+}
+function saveTextList(){localStorage.setItem('poker-textlist',JSON.stringify(textList));}
+function toggleTextRecipient(cb){
+  var n=cb.getAttribute('data-name');
+  var i=textList.indexOf(n);
+  if(cb.checked){if(i<0)textList.push(n);}
+  else if(i>=0)textList.splice(i,1);
+  saveTextList();
+  updateRecipientCount();
+}
+function updateRecipientCount(){
+  var el=document.getElementById('recipient-count');
+  if(el)el.textContent=textList.length+' selected';
+}
+function selectAllRecipients(on){
+  textList=on?contacts.filter(function(c){return optedOutNames.indexOf(c.name)<0;}).map(function(c){return c.name;}):[];
+  saveTextList();
+  renderContacts();
+  updateRecipientCount();
+}
 function saveContacts(){localStorage.setItem('poker-contacts',JSON.stringify(contacts));}
 function saveOptedOut(){localStorage.setItem('poker-optedout',JSON.stringify(optedOutNames));}
 function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
 function sendText(){
+  var picked=contacts.filter(function(c){
+    return textList.indexOf(c.name)>=0 && optedOutNames.indexOf(c.name)<0 && c.mobile;
+  });
+  if(!picked.length){alert('No one is selected. Check names in the Poker Group list first.');return;}
+  var nums=picked.map(function(c){return c.mobile.replace(/[^0-9+]/g,'');}).join(',');
   var date=document.getElementById('g-date').textContent||'TBD';
   var host=document.getElementById('g-host').textContent||'TBD';
   var time=document.getElementById('g-time').textContent||'6:00 PM – 11:00 PM';
   var food=document.getElementById('g-food').textContent||'TBD';
   var link='https://randyleclaire.github.io/Poker-Night';
   var msg='🃏 Poker Night!\n📅 '+date+'\n📍 '+host+'\n⏰ '+time+'\n🍽 Grub: '+food+'\n\nRSVP here: '+link;
-  window.open('sms:?&body='+encodeURIComponent(msg));
+  var isIOS=/iPhone|iPad|iPod/i.test(navigator.userAgent);
+  var url=isIOS?('sms:'+nums+'&body='+encodeURIComponent(msg)):('sms:'+nums+'?body='+encodeURIComponent(msg));
+  window.open(url);
 }
 
 function showOptOutModal(){
@@ -513,7 +583,11 @@ function renderContacts(){
     var dimStyle=isOut?'opacity:0.38;':'';
     var nameStyle=isOut?'text-decoration:line-through;color:rgba(245,240,232,0.4);':'';
     var badge=isOut?' <span style="font-size:0.65rem;color:rgba(245,216,122,0.4);font-weight:400;">opted out</span>':'';
+    var checked=isOut?'':(textList.indexOf(c.name)>=0?'checked':'');
     var html='<div class="contact-item" id="ci-'+i+'" style="'+dimStyle+'">';
+    html+='<div style="display:flex;align-items:flex-start;gap:0.6rem;">';
+    html+='<input type="checkbox" class="txt-check" data-name="'+escHtml(c.name)+'" '+checked+(isOut?' disabled':'')+' onchange="toggleTextRecipient(this)" style="margin-top:0.25rem;width:17px;height:17px;accent-color:#52b788;cursor:'+(isOut?'not-allowed':'pointer')+';flex-shrink:0;"/>';
+    html+='<div style="flex:1;">';
     html+='<div class="contact-name" style="'+nameStyle+'">'+escHtml(c.name)+badge+'</div>';
     if(c.mobile)html+='<div class="contact-detail"><a href="tel:'+escHtml(c.mobile)+'">'+escHtml(c.mobile)+'</a></div>';
     if(c.email)html+='<div class="contact-detail"><a href="mailto:'+escHtml(c.email)+'">'+escHtml(c.email)+'</a></div>';
@@ -526,6 +600,7 @@ function renderContacts(){
     html+='<button class="btn-save-contact" onclick="saveContact('+i+')">Save</button>';
     html+='<button class="btn-cancel-contact" onclick="toggleEdit('+i+')">Cancel</button>';
     html+='</div></div></div>';
+    html+='</div></div>';
     return html;
   }).join('');
 }
@@ -785,7 +860,8 @@ async function optOut(){
   setButtons(false);
 }
 
-loadCached();renderContacts();populateNameDropdown();loadAll();
+if(textList===null){textList=DEFAULT_CONTACTS.map(function(c){return c.name;});saveTextList();}
+loadCached();renderContacts();populateNameDropdown();updateRecipientCount();applyCollapsed();loadAll();
 
 // Log visit
 (function(){
@@ -793,10 +869,11 @@ loadCached();renderContacts();populateNameDropdown();loadAll();
     var visited=JSON.parse(localStorage.getItem('poker-visited')||'[]');
     var now=new Date().toISOString();
     var device=navigator.userAgent.includes('iPhone')||navigator.userAgent.includes('Android')?'Mobile':'Desktop';
-    visited.push({time:now,device:device});
+    var who=localStorage.getItem('poker-name')||'';
+    visited.push({time:now,device:device,name:who});
     if(visited.length>50)visited=visited.slice(-50);
     localStorage.setItem('poker-visited',JSON.stringify(visited));
-    fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'logVisit',device:device,time:now})}).catch(function(){});
+    fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'logVisit',device:device,time:now,name:who})}).catch(function(){});
   }catch(e){}
 })();
 setInterval(function(){if(!document.hidden)loadAll();},60000);
